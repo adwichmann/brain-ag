@@ -1,24 +1,15 @@
-import { User } from 'src/user/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
-export class DecimalColumnTransformer {
-  to(data: number): number {
-    return data;
-  }
-  from(data: string): number {
-    return parseFloat(data);
-  }
-}
+import { Harvest } from '../../harvest/entities/harvest.entity';
+import { User } from '../../user/entities/user.entity';
 
 @Entity()
 export class Farm {
@@ -27,6 +18,12 @@ export class Farm {
 
   @ManyToOne(() => User, (user) => user.farms)
   user: User;
+
+  @OneToMany(() => Harvest, (harvest) => harvest.farm, {
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
+  })
+  harvests: Harvest[];
 
   @Column({ type: 'varchar', length: 50 })
   name: string;
@@ -38,7 +35,7 @@ export class Farm {
   state: string;
 
   @Column('decimal', {
-    precision: 4,
+    precision: 10,
     scale: 2,
     nullable: true,
     default: 0,

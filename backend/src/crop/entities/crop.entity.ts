@@ -3,24 +3,22 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  OneToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Farm } from '../../farm/entities/farm.entity';
+import { Harvest } from '../../harvest/entities/harvest.entity';
+
 @Entity()
-export class User {
+export class Crop {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: 30 })
+  @ManyToOne(() => Harvest, (harvest) => harvest.crops)
+  harvest: Harvest;
+
+  @Column({ type: 'varchar', length: 50 })
   name: string;
-
-  @Column({ type: 'varchar', length: 14 })
-  code: string;
-
-  @OneToMany(() => Farm, (farm) => farm.user)
-  farms: Farm[];
 
   @Column({ default: true })
   active: boolean;

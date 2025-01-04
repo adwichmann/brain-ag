@@ -4,6 +4,8 @@ import { PostgresConfigService } from './utils/config/postgres.config.service';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { FarmModule } from './farm/farm.module';
+import { CropModule } from './crop/crop.module';
+import { HarvestModule } from './harvest/harvest.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { FarmModule } from './farm/farm.module';
     }),
     UserModule,
     FarmModule,
+    CropModule,
+    HarvestModule,
   ],
   controllers: [],
   providers: [],

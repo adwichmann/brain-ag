@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateFarmDto } from './dto/create-farm.dto';
 import { UpdateFarmDto } from './dto/update-farm.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,6 +24,16 @@ export class FarmService {
    */
   async createFarm(createFarmDto: CreateFarmDto): Promise<Farm> {
     try {
+      const total_area = +createFarmDto.total_area || 0;
+      const arable_area = +createFarmDto.arable_area || 0;
+      const vegetation_area = +createFarmDto.vegetation_area || 0;
+
+      if (vegetation_area + arable_area > total_area) {
+        throw new BadRequestException(
+          'Arable area and vegetation area cannot be greater than total area',
+        );
+      }
+
       return await this.farmRepository.save(createFarmDto);
     } catch (error) {
       throw new NotFoundException(
@@ -51,7 +65,7 @@ export class FarmService {
     try {
       const farm = await this.farmRepository.findOne({
         where: { id: id },
-        relations: ['user'],
+        relations: ['user', 'harvests', 'harvests.crops'],
       });
 
       return farm || {};
@@ -74,13 +88,30 @@ export class FarmService {
     updateFarmDto: UpdateFarmDto,
   ): Promise<Farm | {}> {
     try {
-      const farmFound = await this.farmRepository.findOneBy({ id });
+      const farmFound = await this.farmRepository.findOne({
+        where: { id: id },
+        relations: ['user', 'harvests'],
+      });
 
       if (!farmFound) {
         throw new NotFoundException(`Could not find farm with id: ${id}`);
       }
+
+      if (updateFarmDto?.harversts && updateFarmDto?.harversts.length > 0) {
+        await this.farmRepository
+          .createQueryBuilder()
+          .limit(1)
+          .relation(Farm, 'harvests')
+          .of(farmFound)
+          .addAndRemove(updateFarmDto.harversts, farmFound.harvests);
+      }
+
       updateFarmDto.id = id;
-      return await this.farmRepository.save(updateFarmDto);
+      await this.farmRepository.save(updateFarmDto);
+      return await this.farmRepository.findOne({
+        where: { id: id },
+        relations: ['user', 'harvests'],
+      });
     } catch (error) {
       throw new NotFoundException(
         error.message ? error.message : 'Error on update farm',

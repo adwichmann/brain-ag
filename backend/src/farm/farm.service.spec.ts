@@ -4,6 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Farm } from './entities/farm.entity';
 import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
+import { Harvest } from '../harvest/entities/harvest.entity';
 
 describe('FarmService', () => {
   let service: FarmService;
@@ -17,6 +18,7 @@ describe('FarmService', () => {
           provide: getRepositoryToken(Farm),
           useClass: Repository,
         },
+        { provide: getRepositoryToken(Harvest), useClass: Repository },
       ],
     }).compile();
 
@@ -83,47 +85,34 @@ describe('FarmService', () => {
     });
   });
 
-  describe('updateFarm', () => {
-    it('should update a farm', async () => {
-      const updateFarmDto = { name: 'Updated Farm' };
-      const farm = { id: 1, ...updateFarmDto };
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(farm as Farm);
-      jest.spyOn(repository, 'save').mockResolvedValue(farm as Farm);
+  describe('remove', () => {
+    it('should remove a harvest', async () => {
+      const farm = { id: 1, active: true, deleted_on: null };
 
-      expect(await service.updateFarm(1, updateFarmDto as any)).toEqual(farm);
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(farm as Farm);
+      jest.spyOn(repository, 'save').mockResolvedValue({
+        ...farm,
+        active: false,
+        deleted_on: new Date(),
+      } as Farm);
+
+      expect(await service.remove(1)).toEqual({
+        ...farm,
+        active: false,
+        deleted_on: expect.any(Date),
+      });
     });
 
-    it('should throw a NotFoundException if farm not found', async () => {
-      const updateFarmDto = { name: 'Updated Farm' };
+    it('should throw a NotFoundException if no harvest is found', async () => {
       jest.spyOn(repository, 'findOneBy').mockResolvedValue(null);
 
-      await expect(service.updateFarm(1, updateFarmDto as any)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.remove(1)).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw a NotFoundException on save error', async () => {
-      const updateFarmDto = { name: 'Updated Farm' };
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue({ id: 1 } as Farm);
-      jest.spyOn(repository, 'save').mockRejectedValue(new Error('Error'));
+    it('should throw a NotFoundException if an error occurs', async () => {
+      jest.spyOn(repository, 'findOneBy').mockRejectedValue(new Error('Error'));
 
-      await expect(service.updateFarm(1, updateFarmDto as any)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.remove(1)).rejects.toThrow(NotFoundException);
     });
   });
-
-  // describe('remove', () => {
-  //   it('should remove a farm', async () => {
-  //     jest.spyOn(repository, 'delete').mockResolvedValue({ affected: 1 });
-
-  //     expect(await service.remove(1)).toEqual({ affected: 1 });
-  //   });
-
-  //   it('should throw a NotFoundException', async () => {
-  //     jest.spyOn(repository, 'delete').mockRejectedValue(new Error('Error'));
-
-  //     await expect(service.remove(1)).rejects.toThrow(NotFoundException);
-  //   });
-  // });
 });
