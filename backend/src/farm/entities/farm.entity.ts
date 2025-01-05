@@ -10,15 +10,18 @@ import {
 } from 'typeorm';
 import { Harvest } from '../../harvest/entities/harvest.entity';
 import { User } from '../../user/entities/user.entity';
+import { ApiHideProperty } from '@nestjs/swagger';
 
 @Entity()
 export class Farm {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @ApiHideProperty()
   @ManyToOne(() => User, (user) => user.farms)
   user: User;
 
+  @ApiHideProperty()
   @OneToMany(() => Harvest, (harvest) => harvest.farm, {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',

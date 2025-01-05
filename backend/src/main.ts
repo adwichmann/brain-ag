@@ -24,7 +24,6 @@ async function bootstrap() {
     .setTitle('Brain Agriculture')
     .setDescription('The Brain Agriculture API description')
     .setVersion('1.0')
-    .addTag('users')
     .build();
   const documentFactory = () =>
     SwaggerModule.createDocument(app, configSwagger);
