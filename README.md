@@ -55,7 +55,6 @@ A documentação foi gerada utilizando o Swagger e está disponivel no seguinte 
 
 ```
  http://localhost:3000/api
-
 ```
 
 ## Uso
