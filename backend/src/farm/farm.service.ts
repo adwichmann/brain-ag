@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateFarmDto } from './dto/create-farm.dto';
@@ -11,6 +12,8 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class FarmService {
+  private readonly logger = new Logger(FarmService.name);
+
   constructor(
     @InjectRepository(Farm) private readonly farmRepository: Repository<Farm>,
   ) {}
@@ -36,9 +39,9 @@ export class FarmService {
 
       return await this.farmRepository.save(createFarmDto);
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on create farm',
-      );
+      const message = error?.message ? error.message : 'Error on create farm';
+      this.logger.error(`[createFarm]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 
@@ -50,9 +53,9 @@ export class FarmService {
     try {
       return await this.farmRepository.find();
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on get all farms',
-      );
+      const message = error?.message ? error.message : 'Error on get all farms';
+      this.logger.error(`[findAllFarms]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 
@@ -70,9 +73,11 @@ export class FarmService {
 
       return farm || {};
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on get farm by id',
-      );
+      const message = error?.message
+        ? error.message
+        : 'Error on get farm by id';
+      this.logger.error(`[viewFarm]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 
@@ -113,9 +118,9 @@ export class FarmService {
         relations: ['user', 'harvests'],
       });
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on update farm',
-      );
+      const message = error?.message ? error.message : 'Error on update farm';
+      this.logger.error(`[updateFarm]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 
@@ -135,9 +140,9 @@ export class FarmService {
       farmFound.deleted_on = new Date();
       return await this.farmRepository.save(farmFound);
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on delete farm',
-      );
+      const message = error?.message ? error.message : 'Error on delete farm';
+      this.logger.error(`[remove]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateHarvestDto } from './dto/create-harvest.dto';
 import { UpdateHarvestDto } from './dto/update-harvest.dto';
 import { Harvest } from './entities/harvest.entity';
@@ -7,6 +7,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class HarvestService {
+  private readonly logger = new Logger(HarvestService.name);
+
   constructor(
     @InjectRepository(Harvest)
     private readonly harvestRepository: Repository<Harvest>,
@@ -22,9 +24,11 @@ export class HarvestService {
     try {
       return await this.harvestRepository.save(createHarvestDto);
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on create harvest',
-      );
+      const message = error?.message
+        ? error.message
+        : 'Error on create harvest';
+      this.logger.error(`[createHarvest]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 
@@ -36,9 +40,11 @@ export class HarvestService {
     try {
       return await this.harvestRepository.find();
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on get all harvests',
-      );
+      const message = error?.message
+        ? error.message
+        : 'Error on get all harvests';
+      this.logger.error(`[findAllHarvests]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 
@@ -56,9 +62,11 @@ export class HarvestService {
 
       return harvest || {};
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on get harvest by id',
-      );
+      const message = error?.message
+        ? error.message
+        : 'Error on get harvest by id';
+      this.logger.error(`[viewHarvest]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 
@@ -84,11 +92,12 @@ export class HarvestService {
         ...harvestFound,
         ...updateHarvestDto,
       });
-      return await this.harvestRepository.findOneBy({ id });
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on update harvest',
-      );
+      const message = error?.message
+        ? error.message
+        : 'Error on update harvest';
+      this.logger.error(`[updateHarvest]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 
@@ -108,9 +117,11 @@ export class HarvestService {
       harvestFound.deleted_on = new Date();
       return await this.harvestRepository.save(harvestFound);
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on delete harvest',
-      );
+      const message = error?.message
+        ? error.message
+        : 'Error on delete harvest';
+      this.logger.error(`[remove]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 }

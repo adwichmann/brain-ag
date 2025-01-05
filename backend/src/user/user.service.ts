@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -7,6 +7,8 @@ import { User } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
+
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {}
@@ -22,9 +24,9 @@ export class UserService {
       createUserDto.code = createUserDto.code.replace(/[^0-9]/g, '');
       return await this.userRepository.save(createUserDto);
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on create user',
-      );
+      const message = error?.message ? error.message : 'Error on create user';
+      this.logger.error(`[createUser]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 
@@ -36,9 +38,9 @@ export class UserService {
     try {
       return await this.userRepository.find();
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on get all users',
-      );
+      const message = error?.message ? error.message : 'Error on get all users';
+      this.logger.error(`[findAllUser]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 
@@ -56,9 +58,11 @@ export class UserService {
 
       return user || {};
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on get user by id',
-      );
+      const message = error?.message
+        ? error.message
+        : 'Error on get user by id';
+      this.logger.error(`[viewUser]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 
@@ -81,9 +85,9 @@ export class UserService {
       user.id = id;
       return this.userRepository.save(user);
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on update user',
-      );
+      const message = error?.message ? error.message : 'Error on update user';
+      this.logger.error(`[updateUser]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 
@@ -104,9 +108,9 @@ export class UserService {
       userFound.deleted_on = new Date();
       return this.userRepository.save(userFound);
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on delete user',
-      );
+      const message = error?.message ? error.message : 'Error on delete user';
+      this.logger.error(`[removeUser]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 }

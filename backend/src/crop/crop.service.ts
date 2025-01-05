@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateCropDto } from './dto/create-crop.dto';
 import { UpdateCropDto } from './dto/update-crop.dto';
 import { Crop } from './entities/crop.entity';
@@ -7,6 +7,8 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class CropService {
+  private readonly logger = new Logger(CropService.name);
+
   constructor(
     @InjectRepository(Crop)
     private readonly cropRepository: Repository<Crop>,
@@ -22,9 +24,9 @@ export class CropService {
     try {
       return await this.cropRepository.save(createCropDto);
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on create crop',
-      );
+      const message = error?.message ? error.message : 'Error on create crop';
+      this.logger.error(`[createCrop]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 
@@ -41,9 +43,11 @@ export class CropService {
       });
       return crop || {};
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on get crop by id',
-      );
+      const message = error?.message
+        ? error.message
+        : 'Error on get crop by id';
+      this.logger.error(`[viewCrop]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 
@@ -55,9 +59,9 @@ export class CropService {
     try {
       return await this.cropRepository.find();
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on get all crops',
-      );
+      const message = error?.message ? error.message : 'Error on get all crops';
+      this.logger.error(`[findAllCrops]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 
@@ -83,9 +87,9 @@ export class CropService {
       await this.cropRepository.save(updateCropDto);
       return await this.cropRepository.findOneBy({ id });
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on update crop',
-      );
+      const message = error?.message ? error.message : 'Error on update crop';
+      this.logger.error(`[updateCrop]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 
@@ -105,9 +109,9 @@ export class CropService {
       cropFound.deleted_on = new Date();
       return await this.cropRepository.save(cropFound);
     } catch (error) {
-      throw new NotFoundException(
-        error.message ? error.message : 'Error on delete crop',
-      );
+      const message = error?.message ? error.message : 'Error on delete crop';
+      this.logger.error(`[remove]: ${message}`);
+      throw new NotFoundException(message);
     }
   }
 }
