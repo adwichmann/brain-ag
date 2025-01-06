@@ -1,0 +1,16 @@
+.farmer {    
+    background-color: #313131;
+    color: white;
+    padding: 15px;
+}
+
+.farmer h2 {
+  font-size: 1.25rem;
+  margin: 0.5rem 0;
+}  
+
+.farmer ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
