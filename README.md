@@ -26,7 +26,7 @@ E tambem é necessário o Docker instalado para rodar a base de dados
 
 ### Passos de Instalação
 
-1. Clone o repositório: `git clone git@github.com:adwichmann/brain-ag.git`
+1. Clone o repositório: `git clone https://github.com/adwichmann/brain-ag.git`
 2. Navegue até o diretório do projeto: `cd backend`
 3. Instale as dependências: `npm install`
 
