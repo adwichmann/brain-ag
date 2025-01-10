@@ -59,7 +59,7 @@ A documentação foi gerada utilizando o Swagger e está disponivel no seguinte 
  http://localhost:3000/api
 ```
 
-# <ins>FRONTEND (Em desenvolvimento)</ins>
+# <ins>FRONTEND</ins>
 
 Para o frontend, utilizei o ReactJS/Typescript com um conjunto de bibliotecas para melhorar a interface e o desenvolvimento da aplicação.
 
