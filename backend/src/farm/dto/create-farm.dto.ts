@@ -1,12 +1,15 @@
 import {
+  IsArray,
   IsDecimal,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
 import { User } from '../../user/entities/user.entity';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Harvest } from '../../harvest/entities/harvest.entity';
 
 export class CreateFarmDto {
   @ApiProperty()
@@ -41,4 +44,9 @@ export class CreateFarmDto {
   @IsNotEmpty()
   @IsNumber()
   user: User;
+
+  @IsArray()
+  @IsOptional()
+  @ApiPropertyOptional({ description: 'Array of harvests ID' })
+  harvests: Harvest[];
 }

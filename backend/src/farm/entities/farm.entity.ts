@@ -23,8 +23,7 @@ export class Farm {
 
   @ApiHideProperty()
   @OneToMany(() => Harvest, (harvest) => harvest.farm, {
-    onUpdate: 'CASCADE',
-    onDelete: 'CASCADE',
+    orphanedRowAction: 'delete',
   })
   harvests: Harvest[];
 

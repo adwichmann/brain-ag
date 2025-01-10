@@ -44,6 +44,7 @@ describe('FarmController', () => {
       arable_area: 10.5,
       vegetation_area: 12.9,
       user: new User(),
+      harvests: [],
     };
     await controller.createFarm(createFarmDto);
     expect(service.createFarm).toHaveBeenCalledWith(createFarmDto);
@@ -87,7 +88,7 @@ describe('FarmController', () => {
       id: 1,
       name: 'Fazenda Teste',
       active: true,
-      harversts: [],
+      harvests: [],
       crops: [],
     };
     const result = {

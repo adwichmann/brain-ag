@@ -14,8 +14,8 @@ export class UpdateFarmDto extends PartialType(CreateFarmDto) {
 
   @IsArray()
   @IsOptional()
-  @ApiPropertyOptional({ description: 'Array of harversts ID' })
-  harversts: Harvest[];
+  @ApiPropertyOptional({ description: 'Array of harvests ID' })
+  harvests: Harvest[];
 
   @IsArray()
   @IsOptional()

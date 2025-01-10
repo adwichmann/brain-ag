@@ -5,9 +5,7 @@ import { Crop } from './entities/crop.entity';
 import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { CreateCropDto } from './dto/create-crop.dto';
-import { Farm } from '../farm/entities/farm.entity';
 import { Harvest } from '../harvest/entities/harvest.entity';
-import { UpdateCropDto } from './dto/update-crop.dto';
 
 describe('CropService', () => {
   let service: CropService;

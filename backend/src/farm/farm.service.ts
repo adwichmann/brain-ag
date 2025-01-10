@@ -37,7 +37,21 @@ export class FarmService {
         );
       }
 
-      return await this.farmRepository.save(createFarmDto);
+      const newFarm = await this.farmRepository.save(createFarmDto);
+
+      if (createFarmDto?.harvests) {
+        await this.farmRepository
+          .createQueryBuilder()
+          .limit(1)
+          .relation(Farm, 'harvests')
+          .of(newFarm)
+          .addAndRemove(createFarmDto.harvests, newFarm.harvests);
+      }
+
+      return await this.farmRepository.findOne({
+        where: { id: newFarm.id },
+        relations: ['user', 'harvests', 'harvests.crops'],
+      });
     } catch (error) {
       const message = error?.message ? error.message : 'Error on create farm';
       this.logger.error(`[createFarm]: ${message}`);
@@ -51,7 +65,9 @@ export class FarmService {
    */
   async findAllFarms(): Promise<Farm[]> {
     try {
-      return await this.farmRepository.find();
+      return await this.farmRepository.find({
+        relations: ['user', 'harvests', 'harvests.crops'],
+      });
     } catch (error) {
       const message = error?.message ? error.message : 'Error on get all farms';
       this.logger.error(`[findAllFarms]: ${message}`);
@@ -102,20 +118,31 @@ export class FarmService {
         throw new NotFoundException(`Could not find farm with id: ${id}`);
       }
 
-      if (updateFarmDto?.harversts && updateFarmDto?.harversts.length > 0) {
+      const total_area = +updateFarmDto.total_area || 0;
+      const arable_area = +updateFarmDto.arable_area || 0;
+      const vegetation_area = +updateFarmDto.vegetation_area || 0;
+
+      if (vegetation_area + arable_area > total_area) {
+        throw new BadRequestException(
+          'Arable area and vegetation area cannot be greater than total area',
+        );
+      }
+
+      if (updateFarmDto?.harvests) {
         await this.farmRepository
           .createQueryBuilder()
           .limit(1)
           .relation(Farm, 'harvests')
           .of(farmFound)
-          .addAndRemove(updateFarmDto.harversts, farmFound.harvests);
+          .addAndRemove(updateFarmDto.harvests, farmFound.harvests);
       }
 
       updateFarmDto.id = id;
+      delete updateFarmDto.harvests;
       await this.farmRepository.save(updateFarmDto);
       return await this.farmRepository.findOne({
         where: { id: id },
-        relations: ['user', 'harvests'],
+        relations: ['user', 'harvests', 'harvests.crops'],
       });
     } catch (error) {
       const message = error?.message ? error.message : 'Error on update farm';

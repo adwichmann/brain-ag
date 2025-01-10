@@ -18,4 +18,11 @@ export class UpdateUserDto {
   @IsOptional()
   @IsBoolean()
   active: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  code: string;
+
+  id: number;
 }

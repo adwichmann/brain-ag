@@ -4,6 +4,7 @@ import { UpdateHarvestDto } from './dto/update-harvest.dto';
 import { Harvest } from './entities/harvest.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Crop } from '../crop/entities/crop.entity';
 
 @Injectable()
 export class HarvestService {
@@ -34,11 +35,13 @@ export class HarvestService {
 
   /**
    * this function is used to get all the harvests list
-   * @returns promise of array of harversts
+   * @returns promise of array of harvests
    */
   async findAllHarvests(): Promise<Harvest[]> {
     try {
-      return await this.harvestRepository.find();
+      return await this.harvestRepository.find({
+        relations: ['crops'],
+      });
     } catch (error) {
       const message = error?.message
         ? error.message
@@ -82,15 +85,34 @@ export class HarvestService {
     updateHarvestDto: UpdateHarvestDto,
   ): Promise<Harvest | {}> {
     try {
-      const harvestFound = await this.harvestRepository.findOneBy({ id });
+      const harvestFound = await this.harvestRepository.findOne({
+        where: { id: id },
+        relations: ['crops'],
+      });
 
       if (!harvestFound) {
         throw new NotFoundException(`Could not find harvest with id: ${id}`);
       }
-      updateHarvestDto.id = id;
-      return await this.harvestRepository.save({
-        ...harvestFound,
-        ...updateHarvestDto,
+
+      if (updateHarvestDto?.crops) {
+        await this.harvestRepository
+          .createQueryBuilder()
+          .limit(1)
+          .relation(Harvest, 'crops')
+          .of(harvestFound)
+          .addAndRemove(updateHarvestDto?.crops, harvestFound.crops);
+      }
+
+      // updateHarvestDto.id = id;
+      // delete updateHarvestDto.crops;
+      // await this.harvestRepository.save({
+      //   ...harvestFound,
+      //   ...updateHarvestDto,
+      // });
+
+      return await this.harvestRepository.findOne({
+        where: { id: id },
+        relations: ['crops'],
       });
     } catch (error) {
       const message = error?.message

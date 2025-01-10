@@ -74,7 +74,12 @@ describe('UserController', () => {
   });
 
   it('should update a user', async () => {
-    const updateUserDto: UpdateUserDto = { name: 'Jane Doe', active: true };
+    const updateUserDto: UpdateUserDto = {
+      name: 'Jane Doe',
+      active: true,
+      code: '99999',
+      id: 0,
+    };
     const result = { id: 1, ...updateUserDto } as User;
     jest.spyOn(service, 'updateUser').mockResolvedValue(result);
 

@@ -1,6 +1,7 @@
 import { ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { CreateHarvestDto } from './create-harvest.dto';
-import { IsBoolean, IsOptional } from 'class-validator';
+import { IsArray, IsBoolean, IsOptional } from 'class-validator';
+import { Crop } from '../../crop/entities/crop.entity';
 
 export class UpdateHarvestDto extends PartialType(CreateHarvestDto) {
   id: number;
@@ -9,4 +10,9 @@ export class UpdateHarvestDto extends PartialType(CreateHarvestDto) {
   @IsOptional()
   @IsBoolean()
   active: boolean;
+
+  @IsArray()
+  @IsOptional()
+  @ApiPropertyOptional({ description: 'Array of crops ID' })
+  crops: Crop[];
 }

@@ -6,9 +6,4 @@ export class CreateHarvestDto {
   @IsString()
   @IsNotEmpty()
   name: string;
-
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  year: string;
 }

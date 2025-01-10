@@ -80,10 +80,15 @@ export class UserService {
       if (!userFound) {
         throw new NotFoundException(`Could not find user with id: ${id}`);
       }
-      const user: User = new User();
-      user.name = updateUserDto.name;
-      user.id = id;
-      return this.userRepository.save(user);
+
+      updateUserDto.id = id;
+      updateUserDto.code = updateUserDto.code.replace(/[^0-9]/g, '');
+      await this.userRepository.save(updateUserDto);
+
+      return await this.userRepository.findOne({
+        where: { id: id },
+        relations: ['farms'],
+      });
     } catch (error) {
       const message = error?.message ? error.message : 'Error on update user';
       this.logger.error(`[updateUser]: ${message}`);

@@ -39,7 +39,6 @@ describe('HarvestController', () => {
     it('should create a harvest', async () => {
       const dto: CreateHarvestDto = {
         name: 'Segunda parte',
-        year: '2009',
       };
 
       const result = { id: 1, ...dto } as Harvest;
@@ -56,7 +55,6 @@ describe('HarvestController', () => {
         {
           id: 0,
           name: 'Segunda parte',
-          year: '2009',
           farm: new Farm(),
           crops: [],
           active: false,
@@ -89,6 +87,7 @@ describe('HarvestController', () => {
         id: 1,
         name: 'Terceira parte',
         active: true,
+        crops: [],
       };
       const result = {
         ...dto,

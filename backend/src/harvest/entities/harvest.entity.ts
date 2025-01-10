@@ -19,13 +19,12 @@ export class Harvest {
   @Column({ type: 'varchar', length: 50 })
   name: string;
 
-  @Column({ type: 'char', length: 4 })
-  year: string;
-
   @ManyToOne(() => Farm, (farm) => farm.harvests)
   farm: Farm;
 
-  @OneToMany(() => Crop, (crop) => crop.harvest)
+  @OneToMany(() => Crop, (crop) => crop.harvest, {
+    orphanedRowAction: 'delete',
+  })
   crops: Crop[];
 
   @Column({ default: true })
