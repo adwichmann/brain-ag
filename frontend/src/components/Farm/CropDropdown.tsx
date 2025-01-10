@@ -33,7 +33,9 @@ export function CropDropdown({ onChange, onCreate, value }: CropDropdownProps) {
       styles={colourStylesRow}
       isClearable
       isMulti
-      formatCreateLabel={(inputText) => `"${inputText}" adicionar nova safra?`}
+      formatCreateLabel={(inputText) =>
+        `"${inputText}" adicionar nova cultura?`
+      }
       placeholder="Selecione"
       noOptionsMessage={() => "Não existem items para selecionar"}
     />
