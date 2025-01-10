@@ -73,7 +73,7 @@ Para o frontend, utilizei o ReactJS/Typescript com um conjunto de bibliotecas pa
 
 ### Passos para rodar o frontend
 
-1. Após clonar repositório: `git clone git@github.com:adwichmann/brain-ag.git`
+1. Após clonar repositório: `git clone https://github.com/adwichmann/brain-ag.git`
 2. Navegue até o diretório do projeto: `cd frontend`
 3. Instale as dependências: `npm install`
 
