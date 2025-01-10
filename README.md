@@ -61,7 +61,42 @@ A documentação foi gerada utilizando o Swagger e está disponivel no seguinte 
 
 # <ins>FRONTEND (Em desenvolvimento)</ins>
 
-## Uso
+Para o frontend, utilizei o ReactJS/Typescript com um conjunto de bibliotecas para melhorar a interface e o desenvolvimento da aplicação.
+
+- Redux
+- Redux Toolkit
+- shadcn/ui
+- Vite
+- React Data Table
+- Tailwind
+- Zod
+
+### Passos para rodar o frontend
+
+1. Após clonar repositório: `git clone git@github.com:adwichmann/brain-ag.git`
+2. Navegue até o diretório do projeto: `cd fronend`
+3. Instale as dependências: `npm install`
+
+- Inicializa a aplicação
+
+```
+  npm run dev
+```
+
+- Aplicação iniciará na porta 5000 e poderar ser acessada através da url
+
+```
+  http://localhost:5000
+
+```
+
+- Lembrando que a aplicação de backend deve estar rodando para que o frontend funcione corretamente
+
+## Finalidade
 
 A proposta da Brain Agriculture é criar uma aplicação para gerenciar o cadastro de produtores rurais.
 Para isso foram criados endpoints para cadastro, atualização, busca e exclusão de Produtor, Fazenda, Safra e Culturas plantadas.
+
+```
+
+```
