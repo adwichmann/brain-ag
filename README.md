@@ -96,7 +96,3 @@ Para o frontend, utilizei o ReactJS/Typescript com um conjunto de bibliotecas pa
 
 A proposta da Brain Agriculture é criar uma aplicação para gerenciar o cadastro de produtores rurais.
 Para isso foram criados endpoints para cadastro, atualização, busca e exclusão de Produtor, Fazenda, Safra e Culturas plantadas.
-
-```
-
-```
