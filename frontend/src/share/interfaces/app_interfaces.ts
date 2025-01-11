@@ -50,3 +50,14 @@ export interface OptionItem {
   readonly label: string;
   readonly value: string;
 }
+
+export interface ChartData {
+  item: string;
+  total: number;
+  fill: string;
+}
+export interface IChartData {
+  total_area: number;
+  arable_area: number;
+  vegetation_area: number;
+}

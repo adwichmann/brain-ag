@@ -1,10 +1,12 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, current } from "@reduxjs/toolkit";
 import {
+  IChartData,
   ICrop,
   IFarm,
   IFarmer,
   IHarvest,
 } from "../share/interfaces/app_interfaces";
+import { sumFarmsByState } from "../share/utils/formater";
 
 const initialFarmState: {
   farms: IFarm[];
@@ -13,6 +15,8 @@ const initialFarmState: {
   selectedFarm: IFarm | null;
   harvests: IHarvest[];
   crops: ICrop[];
+  farmsByState: { [key: string]: number };
+  chartsData: IChartData;
 } = {
   farms: [],
   farmers: [],
@@ -20,6 +24,8 @@ const initialFarmState: {
   selectedFarm: null,
   harvests: [],
   crops: [],
+  farmsByState: {},
+  chartsData: { arable_area: 0, total_area: 0, vegetation_area: 0 },
 };
 
 const farmSlice = createSlice({
@@ -28,6 +34,7 @@ const farmSlice = createSlice({
   reducers: {
     replaceFarm(state, action) {
       state.farms = action.payload.farms;
+      state.farmsByState = sumFarmsByState(action.payload.farms);
     },
     replaceFarmer(state, action) {
       state.farmers = action.payload.farmers;
@@ -67,11 +74,29 @@ const farmSlice = createSlice({
       state.harvests?.push(action.payload.harvest);
     },
 
-    replaceHCrops(state, action) {
+    replaceCrops(state, action) {
       state.crops = action.payload.crops;
     },
     addCrop(state, action) {
       state.harvests?.push(action.payload.crop);
+    },
+    getFarmsByState(state) {
+      const _farms = current(state.farms);
+      state.farmsByState = sumFarmsByState(_farms);
+
+      if (_farms) {
+        let total_area = 0;
+        let arable_area = 0;
+        let vegetation_area = 0;
+        _farms.map((farm) => {
+          total_area += parseFloat(farm.total_area);
+          arable_area += parseFloat(farm.arable_area);
+          vegetation_area += parseFloat(farm.vegetation_area);
+        });
+        state.chartsData.total_area = total_area;
+        state.chartsData.arable_area = arable_area;
+        state.chartsData.vegetation_area = vegetation_area;
+      }
     },
   },
 });

@@ -318,7 +318,7 @@ export const fetchCropsData = () => {
       const cropData = await fetchData();
 
       dispatch(
-        farmActions.replaceHCrops({
+        farmActions.replaceCrops({
           crops: cropData || [],
         })
       );
@@ -359,7 +359,7 @@ export const createCrop = (crop: Omit<ICrop, "id">) => {
 };
 
 export const deleteFarm = (farmId: number) => {
-  return async (dispatch: AppDispatch) => {
+  return async () => {
     const farmData = async (farmId: number) => {
       const response = await fetch(`http://localhost:3000/api/farm/${farmId}`, {
         method: "DELETE",
@@ -383,7 +383,7 @@ export const deleteFarm = (farmId: number) => {
 };
 
 export const deleteFarmer = (farmerId: number) => {
-  return async (dispatch: AppDispatch) => {
+  return async () => {
     const farmData = async (farmerId: number) => {
       const response = await fetch(
         `http://localhost:3000/api/user/${farmerId}`,
