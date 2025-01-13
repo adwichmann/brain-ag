@@ -246,28 +246,41 @@ const FarmForm = ({
       const _crops: OptionItem[] = [];
       const cropsId: number[] = [];
 
-      selectedFarm?.harvests.map((harvest) => {
-        if (harvest.crops && harvest.crops.length > 0) {
-          harvest.crops.map((crop: ICrop) => {
-            _crops.push({ label: crop.name, value: crop.id.toString() });
-            cropsId.push(crop.id);
-          });
-        }
-      });
+      if (selectedFarm?.harvests.length > 0) {
+        selectedFarm?.harvests.map((harvest) => {
+          const _harvest = harvest as IHarvest;
+          if (_harvest.crops)
+            if (
+              _harvest?.crops &&
+              _harvest.crops &&
+              _harvest.crops.length > 0
+            ) {
+              _harvest.crops.map((crop) => {
+                const _currentCrop = crop as unknown as ICrop;
+                _crops.push({
+                  label: _currentCrop.name,
+                  value: _currentCrop.id.toString(),
+                });
+                cropsId.push(_currentCrop.id);
+              });
+            }
+        });
+      }
 
-      setHarvestValue({
-        value:
-          (selectedFarm &&
-            selectedFarm?.harvests &&
-            selectedFarm?.harvests[0].id.toString()) ||
-          "",
-        label:
-          (selectedFarm &&
-            selectedFarm?.harvests &&
-            selectedFarm?.harvests[0].name) ||
-          "",
-      });
-      setSelectedHarvest(selectedFarm?.harvests[0].id);
+      const _harvest: IHarvest | undefined =
+        selectedFarm &&
+        selectedFarm?.harvests &&
+        selectedFarm?.harvests[0] &&
+        typeof selectedFarm?.harvests[0] !== "number"
+          ? (selectedFarm?.harvests[0] as IHarvest)
+          : undefined;
+      if (_harvest) {
+        setHarvestValue({
+          value: (_harvest && _harvest.id.toString()) || "",
+          label: (_harvest && _harvest.name) || "",
+        });
+        setSelectedHarvest(_harvest.id);
+      }
       setCropValue(_crops);
       setSelectedCrop(cropsId);
     }

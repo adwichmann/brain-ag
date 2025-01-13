@@ -30,15 +30,18 @@ export const getStateByCode = (code: string) => {
   return code;
 };
 
-export const groupBy = (objectArray, property) => {
-  return objectArray.reduce(function (acc, obj) {
-    var key = obj[property];
+export const groupBy = <T extends Record<string, unknown>>(
+  objectArray: T[],
+  property: keyof T
+) => {
+  return objectArray.reduce((acc: { [x: string]: T[] }, obj: T) => {
+    const key = obj[property] as unknown as string;
     if (!acc[key]) {
       acc[key] = [];
     }
     acc[key].push(obj);
     return acc;
-  }, {});
+  }, {} as { [x: string]: T[] });
 };
 
 export const getRandonHex = () => {

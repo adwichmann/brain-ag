@@ -8,10 +8,13 @@ import {
 import { getStateByCode } from "../share/utils/formater";
 import { farmActions } from "./farmSlice";
 
+const VITE_BACKEND_API_HOST = import.meta.env.VITE_BACKEND_API_HOST;
+
 export const fetchFarmData = () => {
+  console.log(VITE_BACKEND_API_HOST);
   return async (dispatch: AppDispatch) => {
     const fetchData = async () => {
-      const response = await fetch("http://localhost:3000/api/farm");
+      const response = await fetch(`${VITE_BACKEND_API_HOST}/farm`);
       if (!response.ok) {
         throw new Error("Error on fetch farm data");
       }
@@ -43,7 +46,7 @@ export const fetchFarmData = () => {
 export const fetchFarmerData = () => {
   return async (dispatch: AppDispatch) => {
     const fetchData = async () => {
-      const response = await fetch("http://localhost:3000/api/user");
+      const response = await fetch(`${VITE_BACKEND_API_HOST}/user`);
       if (!response.ok) {
         throw new Error("Error on fetch farmer data");
       }
@@ -69,7 +72,7 @@ export const updateFarmer = (farmer: IFarmer) => {
   return async (dispatch: AppDispatch) => {
     const farmerData = async (farmer: IFarmer) => {
       const response = await fetch(
-        `http://localhost:3000/api/user/${farmer.id}`,
+        `${VITE_BACKEND_API_HOST}/user/${farmer.id}`,
         {
           method: "PATCH",
           headers: {
@@ -104,20 +107,17 @@ export const updateFarmer = (farmer: IFarmer) => {
 export const updateFarm = (farm: IFarm) => {
   return async (dispatch: AppDispatch) => {
     const farmData = async (farm: IFarm) => {
-      const response = await fetch(
-        `http://localhost:3000/api/farm/${farm.id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...farm,
-            user: farm.user.id,
-            state: farm.state.code,
-          }),
-        }
-      );
+      const response = await fetch(`${VITE_BACKEND_API_HOST}/farm/${farm.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...farm,
+          user: farm.user.id,
+          state: farm.state.code,
+        }),
+      });
       if (!response.ok) {
         throw new Error("Error on fetch farmer data");
       }
@@ -148,7 +148,7 @@ export const updateFarm = (farm: IFarm) => {
 export const createFarm = (farm: Omit<IFarm, "id">) => {
   return async (dispatch: AppDispatch) => {
     const farmData = async (farm: Omit<IFarm, "id">) => {
-      const response = await fetch(`http://localhost:3000/api/farm`, {
+      const response = await fetch(`${VITE_BACKEND_API_HOST}/farm`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -184,7 +184,7 @@ export const createFarm = (farm: Omit<IFarm, "id">) => {
 export const createFarmer = (farmer: Omit<IFarmer, "id">) => {
   return async (dispatch: AppDispatch) => {
     const farmerData = async (farmer: Omit<IFarmer, "id">) => {
-      const response = await fetch(`http://localhost:3000/api/user`, {
+      const response = await fetch(`${VITE_BACKEND_API_HOST}/user`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -217,7 +217,7 @@ export const createFarmer = (farmer: Omit<IFarmer, "id">) => {
 export const fetchHarvestsData = () => {
   return async (dispatch: AppDispatch) => {
     const fetchData = async () => {
-      const response = await fetch("http://localhost:3000/api/harvest");
+      const response = await fetch(`${VITE_BACKEND_API_HOST}/harvest`);
       if (!response.ok) {
         throw new Error("Error on fetch harvest data");
       }
@@ -242,7 +242,7 @@ export const fetchHarvestsData = () => {
 export const createHarvest = (harverst: Omit<IHarvest, "id">) => {
   return async (dispatch: AppDispatch) => {
     const harvestData = async (harverst: Omit<IHarvest, "id">) => {
-      const response = await fetch(`http://localhost:3000/api/harvest`, {
+      const response = await fetch(`${VITE_BACKEND_API_HOST}/harvest`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -274,7 +274,7 @@ export const updateHarvest = (harverst: Omit<IHarvest, "name">) => {
   return async (dispatch: AppDispatch) => {
     const harvestData = async (harverst: Omit<IHarvest, "name">) => {
       const response = await fetch(
-        `http://localhost:3000/api/harvest/${harverst.id}`,
+        `${VITE_BACKEND_API_HOST}/harvest/${harverst.id}`,
         {
           method: "PATCH",
           headers: {
@@ -306,7 +306,7 @@ export const updateHarvest = (harverst: Omit<IHarvest, "name">) => {
 export const fetchCropsData = () => {
   return async (dispatch: AppDispatch) => {
     const fetchData = async () => {
-      const response = await fetch("http://localhost:3000/api/crop");
+      const response = await fetch(`${VITE_BACKEND_API_HOST}/crop`);
       if (!response.ok) {
         throw new Error("Error on fetch crop data");
       }
@@ -331,7 +331,7 @@ export const fetchCropsData = () => {
 export const createCrop = (crop: Omit<ICrop, "id">) => {
   return async (dispatch: AppDispatch) => {
     const cropData = async (crop: Omit<ICrop, "id">) => {
-      const response = await fetch(`http://localhost:3000/api/crop`, {
+      const response = await fetch(`${VITE_BACKEND_API_HOST}/crop`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -361,7 +361,7 @@ export const createCrop = (crop: Omit<ICrop, "id">) => {
 export const deleteFarm = (farmId: number) => {
   return async () => {
     const farmData = async (farmId: number) => {
-      const response = await fetch(`http://localhost:3000/api/farm/${farmId}`, {
+      const response = await fetch(`${VITE_BACKEND_API_HOST}/farm/${farmId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -386,7 +386,7 @@ export const deleteFarmer = (farmerId: number) => {
   return async () => {
     const farmData = async (farmerId: number) => {
       const response = await fetch(
-        `http://localhost:3000/api/user/${farmerId}`,
+        `${VITE_BACKEND_API_HOST}/user/${farmerId}`,
         {
           method: "DELETE",
           headers: {

@@ -3,11 +3,12 @@ import { useSelector } from "react-redux";
 
 import Select from "react-select/creatable";
 import { RootState } from "../../store";
+import { OptionItem } from "../../share/interfaces/app_interfaces";
 
 interface CropDropdownProps {
-  onChange: (value: unknown) => void;
+  onChange: (value: OptionItem[]) => void;
   onCreate: (inputValue: string) => void;
-  value: unknown;
+  value: OptionItem[] | null | undefined;
 }
 
 export function CropDropdown({ onChange, onCreate, value }: CropDropdownProps) {
@@ -15,7 +16,7 @@ export function CropDropdown({ onChange, onCreate, value }: CropDropdownProps) {
   const options = useMemo(
     () =>
       crops.map((crop) => ({
-        value: crop.id,
+        value: crop.id.toString(),
         label: crop.name,
       })),
     [crops]
@@ -28,7 +29,7 @@ export function CropDropdown({ onChange, onCreate, value }: CropDropdownProps) {
     <Select
       options={options}
       onCreateOption={onCreate}
-      onChange={onChange}
+      onChange={(newValue) => onChange(newValue as OptionItem[])}
       value={value}
       styles={colourStylesRow}
       isClearable

@@ -3,11 +3,14 @@ import { useSelector } from "react-redux";
 
 import Select from "react-select/creatable";
 import { RootState } from "../../store";
+import { OptionItem } from "../../share/interfaces/app_interfaces";
 
 interface HarvestDropdownProps {
-  onChange: (value: unknown) => void;
+  onChange: (value: OptionItem) => void;
+
   onCreate: (inputValue: string) => void;
-  value: unknown;
+
+  value: OptionItem | null | undefined;
 }
 
 export function HarvestDropdown({
@@ -19,7 +22,7 @@ export function HarvestDropdown({
   const options = useMemo(
     () =>
       harvests.map((hervest) => ({
-        value: hervest.id,
+        value: hervest.id.toString(),
         label: hervest.name,
       })),
     [harvests]
@@ -32,7 +35,7 @@ export function HarvestDropdown({
     <Select
       options={options}
       onCreateOption={onCreate}
-      onChange={onChange}
+      onChange={(newValue) => onChange(newValue as unknown as OptionItem)}
       value={value}
       styles={colourStylesRow}
       placeholder="Selecione"
