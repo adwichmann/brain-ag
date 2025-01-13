@@ -16,7 +16,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   app.enableCors({
-    origin: ['http://localhost:5000'],
+    origin: ['http://localhost:5000', 'https://brain-ag-psi.vercel.app'],
     methods: ['GET', 'POST', 'DELETE', 'PATCH'],
     credentials: false,
   });
