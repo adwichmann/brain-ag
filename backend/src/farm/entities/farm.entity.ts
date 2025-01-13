@@ -37,7 +37,7 @@ export class Farm {
   state: string;
 
   @Column('decimal', {
-    precision: 10,
+    precision: 12,
     scale: 2,
     nullable: true,
     default: 0,
@@ -45,7 +45,7 @@ export class Farm {
   total_area: number;
 
   @Column('decimal', {
-    precision: 4,
+    precision: 12,
     scale: 2,
     nullable: true,
     default: 0,
@@ -53,7 +53,7 @@ export class Farm {
   arable_area: number;
 
   @Column('decimal', {
-    precision: 4,
+    precision: 12,
     scale: 2,
     nullable: true,
     default: 0,
