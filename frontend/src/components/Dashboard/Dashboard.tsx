@@ -6,6 +6,7 @@ import CustomChart from "./CustomChart";
 import { farmActions } from "../../store/farmSlice";
 import { getRandonHex } from "../../share/utils/formater";
 import { ChartData } from "../../share/interfaces/app_interfaces";
+import LoaderSpin from "../Loader";
 
 const Dashboard = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -16,7 +17,7 @@ const Dashboard = () => {
   );
 
   const chartsData = useSelector((state: RootState) => state.farm.chartsData);
-
+  const loading = useSelector((state: RootState) => state.farm.loading);
   const chartFarmStateData: ChartData[] = [];
   const chartAreaData: ChartData[] = [];
   const chartConfig: { [key: string]: { Label: string; color: string } } = {};
@@ -61,6 +62,10 @@ const Dashboard = () => {
       Label: "Agricultável",
       color: totalArablecolor,
     };
+  }
+
+  if (loading) {
+    return <LoaderSpin />;
   }
   return (
     <main className="page h-full text-center items-center">

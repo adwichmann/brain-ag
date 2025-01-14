@@ -17,6 +17,7 @@ const initialFarmState: {
   crops: ICrop[];
   farmsByState: { [key: string]: number };
   chartsData: IChartData;
+  loading: boolean;
 } = {
   farms: [],
   farmers: [],
@@ -26,6 +27,7 @@ const initialFarmState: {
   crops: [],
   farmsByState: {},
   chartsData: { arable_area: 0, total_area: 0, vegetation_area: 0 },
+  loading: false,
 };
 
 const farmSlice = createSlice({
@@ -98,6 +100,30 @@ const farmSlice = createSlice({
         state.chartsData.vegetation_area = vegetation_area;
       }
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addMatcher(
+        (action) =>
+          action.type.includes("/pending") && action.type.includes(":load"),
+        (state) => {
+          state.loading = true;
+        }
+      )
+      .addMatcher(
+        (action) =>
+          action.type.includes("/fulfilled") && action.type.includes(":load"),
+        (state) => {
+          state.loading = false;
+        }
+      )
+      .addMatcher(
+        (action) =>
+          action.type.includes("/rejected") && action.type.includes(":load"),
+        (state) => {
+          state.loading = false;
+        }
+      );
   },
 });
 

@@ -29,11 +29,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../components/ui/alert-dialog";
+import LoaderSpin from "../components/Loader";
 
 const FarmerPage = () => {
   const farmers = useSelector((state: RootState) => state.farm.farmers);
+  const loading = useSelector((state: RootState) => state.farm.loading);
 
-  const [pending, setPending] = useState(false);
   const dispatch: AppDispatch = useDispatch();
 
   const [open, setOpen] = useState(false);
@@ -98,11 +99,12 @@ const FarmerPage = () => {
   };
 
   useEffect(() => {
-    setPending(true);
     dispatch(fetchFarmerData());
-
-    setPending(false);
   }, [dispatch]);
+
+  if (loading) {
+    return <LoaderSpin />;
+  }
 
   if (openEdit) {
     return (
@@ -168,7 +170,7 @@ const FarmerPage = () => {
           <DataTable
             columns={columns}
             data={farmers}
-            progressPending={pending}
+            progressPending={loading}
             highlightOnHover={true}
             onRowClicked={(row) => {
               dispatch(farmActions.setSelectedFarmer(row));

@@ -1,3 +1,4 @@
+import { createAsyncThunk } from "@reduxjs/toolkit";
 import { AppDispatch } from ".";
 import {
   ICrop,
@@ -10,63 +11,46 @@ import { farmActions } from "./farmSlice";
 
 const VITE_BACKEND_API_HOST = import.meta.env.VITE_BACKEND_API_HOST;
 
-export const fetchFarmData = () => {
-  console.log(VITE_BACKEND_API_HOST);
-  return async (dispatch: AppDispatch) => {
-    const fetchData = async () => {
-      const response = await fetch(`${VITE_BACKEND_API_HOST}/farm`);
-      if (!response.ok) {
-        throw new Error("Error on fetch farm data");
-      }
-
-      return await response.json();
-    };
-
-    try {
-      const farmData = await fetchData();
-      farmData.map((farm: IFarm, index: number) => {
-        farm.state = {
-          name: getStateByCode(farm.state as unknown as string),
-          code: farm.state as unknown as string,
-        };
-        farmData[index] = farm;
-      });
-
-      dispatch(
-        farmActions.replaceFarm({
-          farms: farmData || [],
-        })
-      );
-    } catch (error) {
-      console.log(error);
+export const fetchFarmData = createAsyncThunk(
+  "farms/fetchFarmData:load",
+  async (_payload, { rejectWithValue, dispatch }) => {
+    const responseReult = await fetch(`${VITE_BACKEND_API_HOST}/farm`);
+    if (responseReult.status !== 200) {
+      return rejectWithValue(await responseReult.json());
     }
-  };
-};
+    const farmData = await responseReult.json();
+    farmData.map((farm: IFarm, index: number) => {
+      farm.state = {
+        name: getStateByCode(farm.state as unknown as string),
+        code: farm.state as unknown as string,
+      };
+      farmData[index] = farm;
+    });
 
-export const fetchFarmerData = () => {
-  return async (dispatch: AppDispatch) => {
-    const fetchData = async () => {
-      const response = await fetch(`${VITE_BACKEND_API_HOST}/user`);
-      if (!response.ok) {
-        throw new Error("Error on fetch farmer data");
-      }
+    dispatch(
+      farmActions.replaceFarm({
+        farms: farmData || [],
+      })
+    );
+  }
+);
 
-      return await response.json();
-    };
-
-    try {
-      const farmData = await fetchData();
-
-      dispatch(
-        farmActions.replaceFarmer({
-          farmers: farmData || [],
-        })
-      );
-    } catch (error) {
-      console.log(error);
+export const fetchFarmerData = createAsyncThunk(
+  "farms/fetchFarmerData:load",
+  async (_payload, { rejectWithValue, dispatch }) => {
+    const responseReult = await fetch(`${VITE_BACKEND_API_HOST}/user`);
+    if (responseReult.status !== 200) {
+      return rejectWithValue(await responseReult.json());
     }
-  };
-};
+    const farmerData = await responseReult.json();
+
+    dispatch(
+      farmActions.replaceFarmer({
+        farmers: farmerData || [],
+      })
+    );
+  }
+);
 
 export const updateFarmer = (farmer: IFarmer) => {
   return async (dispatch: AppDispatch) => {
