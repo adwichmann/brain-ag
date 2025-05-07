@@ -98,13 +98,6 @@ const FarmForm = ({
     (state: RootState) => state.farm.selectedFarm
   );
 
-  const farmers = useSelector((state: RootState) => state.farm.farmers);
-  //const harvests = useSelector((state: RootState) => state.farm.harvests || []);
-  const [selectedState, setSelectedState] = useState(
-    selectedFarm?.state.code || ""
-  );
-  const [selectedCity, setSelectedCity] = useState<string[]>([]);
-
   const { toast } = useToast();
   const dispatch: AppDispatch = useDispatch();
   const navigate = useNavigate();
@@ -112,6 +105,12 @@ const FarmForm = ({
   const [selectedCrop, setSelectedCrop] = useState<number[]>([]);
   const [inputHarvestValue, setHarvestValue] = useState<OptionItem | null>();
   const [inputCropValue, setCropValue] = useState<OptionItem[]>([]);
+  const farmers = useSelector((state: RootState) => state.farm.farmers);
+  //const harvests = useSelector((state: RootState) => state.farm.harvests || []);
+  const [selectedState, setSelectedState] = useState(
+    selectedFarm?.state.code || ""
+  );
+  const [selectedCity, setSelectedCity] = useState<string[]>([]);
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: !create
@@ -230,8 +229,11 @@ const FarmForm = ({
   useEffect(() => {
     if (create) {
       dispatch(farmActions.setSelectedFarm(null));
+      if (farmers.length <= 0) {
+        dispatch(fetchFarmerData());
+      }
     }
-  }, [create, dispatch]);
+  }, [create, farmers, dispatch]);
 
   useEffect(() => {
     dispatch(fetchHarvestsData());
@@ -375,15 +377,14 @@ const FarmForm = ({
                   onValueChange={(value) => {
                     return field.onChange(value);
                   }}
-                  // defaultValue={selectedFarm?.user?.name || ""}
-                  onOpenChange={() => {
-                    dispatch(fetchFarmerData());
-                  }}
+                  defaultValue={selectedFarm?.user?.name || ""}
                   {...field}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o produtor" />
-                  </SelectTrigger>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o produtor" />
+                    </SelectTrigger>
+                  </FormControl>
                   <SelectContent>
                     {farmers.map((user) => (
                       <SelectItem key={user.id} value={user.id.toString()}>
