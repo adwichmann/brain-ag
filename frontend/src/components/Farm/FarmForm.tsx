@@ -16,8 +16,6 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   ICrop,
-  IFarm,
-  IFarmer,
   IHarvest,
   OptionItem,
 } from "../../share/interfaces/app_interfaces";
@@ -40,12 +38,12 @@ import {
   SelectValue,
 } from "../ui/select";
 
-import cityItems from "./../../share/data/citystate.json";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { farmActions } from "../../store/farmSlice";
 
 import { HarvestDropdown } from "./HarvestDropdown";
 import { CropDropdown } from "./CropDropdown";
+import { useBrazilianLocations } from "../../hooks/useBrazilianLocations";
 
 const FormSchema = z
   .object({
@@ -70,13 +68,14 @@ const FormSchema = z
         message: "Área de vegetação deve ser preenchida",
       }),
     user: z.string(),
-    feedback_area: z.string(),
+    feedback_area: z.string().optional(),
   })
   .superRefine((values, ctx) => {
-    if (
-      parseFloat(values.arable_area) + parseFloat(values.vegetation_area) >
-      parseFloat(values.total_area)
-    ) {
+    const total = parseFloat(values.total_area);
+    const arable = parseFloat(values.arable_area);
+    const vegetation = parseFloat(values.vegetation_area);
+
+    if (arable + vegetation > total) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message:
@@ -86,23 +85,23 @@ const FormSchema = z
     }
   });
 
+type FarmFormValues = z.infer<typeof FormSchema>;
+
 const FarmForm = ({
   create,
   closemodal,
 }: {
   create?: boolean;
-  closemodal?: React.Dispatch<React.SetStateAction<boolean>>;
+  closemodal?: (open: boolean) => void;
 }) => {
-  const selectedFarm = useAppSelector(
-    (state) => state.farm.selectedFarm
-  );
-
+  const selectedFarm = useAppSelector((state) => state.farm.selectedFarm);
   const { toast } = useToast();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const [selectedHarvest, setSelectedHarvest] = useState<number | null>();
+
+  const [selectedHarvest, setSelectedHarvest] = useState<number | null>(null);
   const [selectedCrop, setSelectedCrop] = useState<number[]>([]);
-  const [inputHarvestValue, setHarvestValue] = useState<OptionItem | null>();
+  const [inputHarvestValue, setHarvestValue] = useState<OptionItem | null>(null);
   const [inputCropValue, setCropValue] = useState<OptionItem[]>([]);
 
   const { data: farmers = [] } = useGetFarmersQuery();
@@ -114,21 +113,22 @@ const FarmForm = ({
   const [updateHarvestMutation] = useUpdateHarvestMutation();
   const [createHarvestMutation] = useCreateHarvestMutation();
   const [createCropMutation] = useCreateCropMutation();
-  const [selectedState, setSelectedState] = useState(
+
+  const { states, cities, handleStateChange } = useBrazilianLocations(
     selectedFarm?.state ?? ""
   );
-  const [selectedCity, setSelectedCity] = useState<string[]>([]);
-  const form = useForm<z.infer<typeof FormSchema>>({
+
+  const form = useForm<FarmFormValues>({
     resolver: zodResolver(FormSchema),
-    defaultValues: !create
+    defaultValues: !create && selectedFarm
       ? {
-        name: selectedFarm?.name ?? "",
-        city: selectedFarm?.city ?? "",
-        state: selectedFarm?.state ?? "",
-        total_area: selectedFarm?.total_area.toString() ?? "0",
-        arable_area: selectedFarm?.arable_area.toString() ?? "0",
-        vegetation_area: selectedFarm?.vegetation_area.toString() ?? "0",
-        user: selectedFarm?.user?.name ?? "",
+        name: selectedFarm.name,
+        city: selectedFarm.city,
+        state: selectedFarm.state,
+        total_area: selectedFarm.total_area.toString(),
+        arable_area: selectedFarm.arable_area.toString(),
+        vegetation_area: selectedFarm.vegetation_area.toString(),
+        user: selectedFarm.user?.id.toString() ?? "",
         feedback_area: "",
       }
       : {
@@ -143,197 +143,102 @@ const FarmForm = ({
       },
   });
 
-  const onSubmit = async (data: z.infer<typeof FormSchema>) => {
-    if (selectedFarm) {
-      const farm: IFarm = {
+  const onSubmit = async (data: FarmFormValues) => {
+    try {
+      const farmData = {
         name: data.name,
-        id: selectedFarm.id,
-        active: true,
-        user: selectedFarm.user,
         city: data.city,
         state: data.state,
         total_area: data.total_area,
         arable_area: data.arable_area,
         vegetation_area: data.vegetation_area,
-        harvests: selectedHarvest ? [selectedHarvest] : [],
+        harvests: selectedHarvest ? [{ id: selectedHarvest } as IHarvest] : [],
       };
 
-      if (selectedHarvest) {
-        const harvestUpdate: Omit<IHarvest, "name"> = {
-          id: selectedHarvest,
-          crops: selectedCrop,
-        };
-        await updateHarvestMutation(harvestUpdate).unwrap();
+      if (selectedFarm) {
+        await updateFarmMutation({
+          ...farmData,
+          id: selectedFarm.id,
+          user: selectedFarm.user.id,
+        } as any).unwrap();
+        toast({ title: "Fazenda atualizada com sucesso" });
+      } else {
+        await createFarmMutation({
+          ...farmData,
+          user: parseInt(data.user),
+        } as any).unwrap();
+        toast({ title: "Fazenda criada com sucesso" });
       }
 
-      await updateFarmMutation(farm).unwrap();
-      toast({
-        title: "Fazenda atualizada com sucesso",
-      });
+      void (async () => {
+        try {
+          if (selectedHarvest) {
+            await updateHarvestMutation({
+              id: selectedHarvest,
+              crops: selectedCrop.map(id => ({ id } as ICrop)),
+            } as any).unwrap();
+          }
+        } catch {
+          // Error handled by global toast or silently
+        }
+      })();
 
-      const timeout = setTimeout(() => {
+      setTimeout(() => {
         if (closemodal) closemodal(false);
-        void navigate("/farm");
+        navigate("/farm");
       }, 500);
-
-      return () => clearTimeout(timeout);
-    } else {
-      const farm: Omit<IFarm, "id"> = {
-        name: data.name,
-        active: true,
-        user: +data.user as unknown as IFarmer,
-        city: data.city,
-        state: data.state,
-        total_area: data.total_area,
-        arable_area: data.arable_area,
-        vegetation_area: data.vegetation_area,
-        harvests: selectedHarvest ? [selectedHarvest] : [],
-      };
-
-      await createFarmMutation(farm).unwrap();
-      if (selectedHarvest) {
-        const harvestUpdate: Omit<IHarvest, "name"> = {
-          id: selectedHarvest,
-          crops: selectedCrop,
-        };
-        await updateHarvestMutation(harvestUpdate).unwrap();
-      }
+    } catch {
       toast({
-        title: "Fazenda creada com sucesso",
+        title: "Erro ao salvar fazenda",
+        variant: "destructive",
       });
-
-      const timeout = setTimeout(() => {
-        if (closemodal) closemodal(false);
-        void navigate("/farm");
-      }, 500);
-
-      return () => clearTimeout(timeout);
     }
   };
 
-  const handleStateChage = useCallback((value: string) => {
-    setSelectedState(value);
-
-    const existingCitys = cityItems.estados.findIndex((item) => {
-      return item.sigla === value;
-    });
-    if (existingCitys !== -1) {
-      setSelectedCity(cityItems.estados[existingCitys].cidades);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (selectedState) {
-      const existingCitys = cityItems.estados.findIndex((item) => {
-        return item.sigla === selectedState;
-      });
-      if (existingCitys !== -1) {
-        setSelectedCity(cityItems.estados[existingCitys].cidades);
-      }
-    }
-  }, [handleStateChage, selectedState]);
-
   useEffect(() => {
     if (create) {
-      void dispatch(farmActions.setSelectedFarm(null));
+      dispatch(farmActions.setSelectedFarm(null));
     }
   }, [create, dispatch]);
 
   useEffect(() => {
-    if (selectedFarm?.harvests && selectedFarm?.harvests.length > 0) {
-      const _crops: OptionItem[] = [];
-      const cropsId: number[] = [];
+    if (selectedFarm?.harvests && selectedFarm.harvests.length > 0) {
+      const harvest = selectedFarm.harvests[0];
+      setSelectedHarvest(harvest.id);
+      setHarvestValue({
+        value: harvest.id.toString(),
+        label: harvest.name,
+      });
 
-      if (selectedFarm?.harvests.length > 0) {
-        selectedFarm?.harvests.map((harvest: IHarvest | number) => {
-          const _harvest = harvest as IHarvest;
-          if (_harvest.crops?.length > 0) {
-            _harvest.crops.map((crop: ICrop | number) => {
-              const _currentCrop = crop as unknown as ICrop;
-              _crops.push({
-                label: _currentCrop.name,
-                value: _currentCrop.id.toString(),
-              });
-              cropsId.push(_currentCrop.id);
-            });
-          }
-        });
-      }
-
-      const _harvest: IHarvest | undefined =
-        selectedFarm &&
-          selectedFarm?.harvests &&
-          selectedFarm?.harvests[0] &&
-          typeof selectedFarm?.harvests[0] !== "number"
-          ? (selectedFarm?.harvests[0])
-          : undefined;
-      if (_harvest) {
-        setHarvestValue({
-          value: (_harvest && _harvest.id.toString()) || "",
-          label: (_harvest && _harvest.name) || "",
-        });
-        setSelectedHarvest(_harvest.id);
-      }
-      setCropValue(_crops);
-      setSelectedCrop(cropsId);
+      const crops = harvest.crops || [];
+      setSelectedCrop(crops.map(c => c.id));
+      setCropValue(crops.map(c => ({
+        label: c.name,
+        value: c.id.toString(),
+      })));
     }
-  }, [selectedFarm, selectedFarm?.harvests]);
+  }, [selectedFarm]);
 
-  const createOption = (label: string) => ({
-    label,
-    value: label.toLowerCase().replace(/\W/g, ""),
-  });
-  const handleCreate = (item: string) => {
-    const timeout = setTimeout(async () => {
-      const newOption = createOption(item);
-
-      const NewHarvert = {
-        name: item,
-        crops: [],
-      };
-      const harvest = await createHarvestMutation(NewHarvert).unwrap();
-      if (harvest) setSelectedHarvest(harvest.id);
-
-      setHarvestValue(newOption);
-    }, 1000);
-
-    return () => clearTimeout(timeout);
-  };
-
-  const handleCreateCrop = (crop: string) => {
-    if (inputHarvestValue) {
-      const timeout = setTimeout(async () => {
-        const newOption = createOption(crop);
-
-        const newCrop = {
-          name: crop,
-          harvest: selectedHarvest ?? undefined,
-        };
-
-        await createCropMutation(newCrop).unwrap();
-        setCropValue([...inputCropValue, newOption]);
-        //setCropValue((prev) => [...prev, newOption]);
-      }, 1000);
-
-      return () => clearTimeout(timeout);
+  const handleCreateHarvest = async (name: string) => {
+    try {
+      const harvest = await createHarvestMutation({ name, crops: [] } as any).unwrap();
+      setSelectedHarvest(harvest.id);
+      setHarvestValue({ label: name, value: harvest.id.toString() });
+    } catch {
+      toast({ title: "Erro ao criar safra", variant: "destructive" });
     }
   };
 
-  const handleChangeHarvest = (item: OptionItem) => {
-    setSelectedHarvest(+item.value);
-    setHarvestValue({ value: item.value, label: item.label });
-    setSelectedCrop([]);
-    setCropValue([]);
-  };
-
-  const handleChangeCrop = (item: OptionItem[]) => {
-    const cropsId: number[] = [];
-    item.map((i) => {
-      cropsId.push(+i.value);
-    });
-
-    setSelectedCrop(cropsId);
-    setCropValue(item);
+  const handleCreateCrop = async (name: string) => {
+    if (!selectedHarvest) return;
+    try {
+      const crop = await createCropMutation({ name } as any).unwrap();
+      const newOption = { label: name, value: crop.id.toString() };
+      setCropValue(prev => [...prev, newOption]);
+      setSelectedCrop(prev => [...prev, crop.id]);
+    } catch {
+      toast({ title: "Erro ao criar cultura", variant: "destructive" });
+    }
   };
 
   return (
@@ -346,30 +251,23 @@ const FarmForm = ({
             <FormItem>
               <FormLabel>Nome</FormLabel>
               <FormControl>
-                <Input
-                  defaultValue={selectedFarm?.name || ""}
-                  placeholder="Nome da fazenda"
-                  {...field}
-                />
+                <Input placeholder="Nome da fazenda" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        {create ? (
-          <FormField
-            control={form.control}
-            name="user"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Produtor</FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    return field.onChange(value);
-                  }}
-                  defaultValue={selectedFarm?.user?.name || ""}
-                  {...field}
-                >
+
+        <FormField
+          control={form.control}
+          name="user"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Produtor</FormLabel>
+              {create ? (
+                <Select onValueChange={(val) => {
+                  void field.onChange(val);
+                }} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o produtor" />
@@ -383,141 +281,121 @@ const FarmForm = ({
                     ))}
                   </SelectContent>
                 </Select>
-              </FormItem>
-            )}
-          />
-        ) : (
-          <FormField
-            control={form.control}
-            name="user"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Produtor</FormLabel>
+              ) : (
                 <FormControl>
-                  <Input
-                    defaultValue={selectedFarm?.user?.name || ""}
-                    placeholder="Produtor"
-                    readOnly={true}
-                    {...field}
-                  />
+                  <Input value={selectedFarm?.user?.name || ""} readOnly disabled />
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        <div className="flex gap-6 grid-cols-1 lg:grid-cols-2">
-          <FormItem className="w-2/4">
+              )}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex gap-6">
+          <FormItem className="w-1/2">
             <FormLabel>Safra</FormLabel>
-            <FormControl></FormControl>
             <HarvestDropdown
-              // onChange={(newValue) => setSelectedOption(newValue.value)}
-              onChange={handleChangeHarvest}
+              onChange={(item) => {
+                setSelectedHarvest(parseInt(item.value));
+                setHarvestValue(item);
+                setSelectedCrop([]);
+                setCropValue([]);
+              }}
               value={inputHarvestValue}
-              onCreate={handleCreate}
+              onCreate={handleCreateHarvest}
             />
-            <FormDescription>
-              Selecione ou digite para criar uma nova safra
-            </FormDescription>
+            <FormDescription>Selecione ou crie uma safra</FormDescription>
           </FormItem>
 
-          {inputHarvestValue && inputHarvestValue.value !== "" && (
-            <FormItem className="w-full">
-              <FormLabel>Culturas plantadas</FormLabel>
-              <FormControl></FormControl>
+          {inputHarvestValue && (
+            <FormItem className="w-1/2">
+              <FormLabel>Culturas</FormLabel>
               <CropDropdown
-                // onChange={(newValue) => setSelectedOption(newValue.value)}
-                onChange={handleChangeCrop}
+                onChange={(items) => {
+                  setCropValue(items);
+                  setSelectedCrop(items.map(i => parseInt(i.value)));
+                }}
                 value={inputCropValue}
                 onCreate={handleCreateCrop}
               />
-              <FormDescription>
-                Selecione ou digite para criar uma nova cultura
-              </FormDescription>
+              <FormDescription>Selecione as culturas</FormDescription>
             </FormItem>
           )}
         </div>
 
-        {/* <AddSelect defaultValue={selectedOption} options={options} /> */}
-
-        <div className="flex gap-6 grid-cols-1 lg:grid-cols-2">
+        <div className="flex gap-6">
           <FormField
             control={form.control}
             name="state"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-1/2">
                 <FormLabel>Estado</FormLabel>
                 <Select
-                  onValueChange={(value2) => {
-                    handleStateChage(value2);
-                    return field.onChange(value2);
+                  onValueChange={(val) => {
+                    void field.onChange(val);
+                    handleStateChange(val);
+                    form.setValue("city", "");
                   }}
                   defaultValue={field.value}
-                  {...field}
                 >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Estado" />
-                  </SelectTrigger>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Estado" />
+                    </SelectTrigger>
+                  </FormControl>
                   <SelectContent>
-                    {cityItems.estados.map((item) => (
-                      <SelectItem key={item.sigla} value={item.sigla}>
-                        {item.nome}
+                    {states.map((s) => (
+                      <SelectItem key={s.sigla} value={s.sigla}>
+                        {s.nome}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
               </FormItem>
             )}
           />
 
-          {selectedCity && selectedCity.length > 0 && (
-            <FormField
-              control={form.control}
-              name="city"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormLabel>Cidade</FormLabel>
-                  <Select
-                    onValueChange={(value2) => {
-                      return field.onChange(value2);
-                    }}
-                    defaultValue={field.value}
-                    {...field}
-                  >
-                    <SelectTrigger className="w-[180px]">
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem className="w-1/2">
+                <FormLabel>Cidade</FormLabel>
+                <Select
+                  onValueChange={(val) => {
+                    void field.onChange(val);
+                  }}
+                  value={field.value}
+                  disabled={!cities.length}
+                >
+                  <FormControl>
+                    <SelectTrigger>
                       <SelectValue placeholder="Cidade" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {selectedCity.map((item) => (
-                        <SelectItem key={item} value={item}>
-                          {item}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-          )}
+                  </FormControl>
+                  <SelectContent>
+                    {cities.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-        <div className="flex gap-6 grid-cols-1 lg:grid-cols-2">
+
+        <div className="grid grid-cols-3 gap-6">
           <FormField
             control={form.control}
             name="total_area"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Área total</FormLabel>
+                <FormLabel>Área Total (ha)</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Área total da fazenda"
-                    defaultValue={selectedFarm?.total_area || ""}
-                    {...field}
-                  />
+                  <Input type="number" {...field} />
                 </FormControl>
-                <FormDescription>
-                  Área total da fazenda (em hectares)
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -527,18 +405,10 @@ const FarmForm = ({
             name="arable_area"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Área agricultável</FormLabel>
+                <FormLabel>Área Agricultável (ha)</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Área agricultável"
-                    defaultValue={selectedFarm?.arable_area || ""}
-                    {...field}
-                  />
+                  <Input type="number" {...field} />
                 </FormControl>
-                <FormDescription>
-                  Área agricultável (em hectares)
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -548,51 +418,34 @@ const FarmForm = ({
             name="vegetation_area"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Área de vegetação</FormLabel>
+                <FormLabel>Área Vegetação (ha)</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Área de vegetação"
-                    defaultValue={selectedFarm?.vegetation_area || ""}
-                    {...field}
-                  />
+                  <Input type="number" {...field} />
                 </FormControl>
-                <FormDescription>
-                  Área de vegetação (em hectares)
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
 
-        <div></div>
         <FormField
-          control={form.control}
           name="feedback_area"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <p {...field}></p>
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
+          render={() => <FormMessage />}
         />
-        <div className="text-right">
+
+        <div className="flex justify-end gap-4">
           <Button
             type="button"
+            variant="ghost"
             onClick={() => {
-              void dispatch(farmActions.setSelectedFarm(null));
+              dispatch(farmActions.setSelectedFarm(null));
               if (closemodal) closemodal(false);
-              void navigate("/farm");
+              navigate("/farm");
             }}
-            variant="link"
           >
-            Voltar
+            Cancelar
           </Button>
-          <Button type="submit">Salvar</Button>
+          <Button type="submit">Salvar Fazenda</Button>
         </div>
       </form>
     </Form>

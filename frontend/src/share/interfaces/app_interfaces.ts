@@ -1,3 +1,14 @@
+export interface ICrop {
+  id: number;
+  name: string;
+}
+
+export interface IHarvest {
+  id: number;
+  name: string;
+  crops: ICrop[];
+}
+
 export interface IFarm {
   id: number;
   name: string;
@@ -8,7 +19,7 @@ export interface IFarm {
   vegetation_area: string;
   active?: boolean;
   user: IFarmer;
-  harvests?: IHarvest[] | number[];
+  harvests?: IHarvest[];
   created_on?: Date;
   updated_on?: Date;
   deleted_on?: Date;
@@ -24,24 +35,10 @@ export interface IFarmer {
   name: string;
   code: string;
   farms?: IFarm[];
-
   active: boolean;
   created_on?: Date;
   updated_on?: Date;
   deleted_on?: Date;
-}
-
-export interface IHarvest {
-  id: number;
-  name: string;
-  crops: number[];
-}
-
-export interface ICrop {
-  id: number;
-  name: string;
-  harvest?: number;
-  farm?: number;
 }
 
 export type INewFarmer = Omit<IFarmer, "id">;
@@ -56,8 +53,10 @@ export interface ChartData {
   total: number;
   fill: string;
 }
+
 export interface IChartData {
   total_area: number;
   arable_area: number;
   vegetation_area: number;
 }
+

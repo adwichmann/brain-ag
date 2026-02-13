@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { formatCpfCnpj, sumFarmsByState } from './formater';
-import { IFarm } from '../interfaces/app_interfaces';
 
 describe('formater utils', () => {
     describe('formatCpfCnpj', () => {
@@ -20,15 +19,15 @@ describe('formater utils', () => {
     describe('sumFarmsByState', () => {
         it('should sum farms by state correctly', () => {
             const mockFarms = [
-                { state: { code: 'SP', name: 'SP' } },
-                { state: { code: 'MG', name: 'MG' } },
-                { state: { code: 'SP', name: 'SP' } },
-            ] as IFarm[];
+                { state: 'AC' },
+                { state: 'AL' },
+                { state: 'AC' },
+            ] as any[];
 
             const result = sumFarmsByState(mockFarms);
             expect(result).toEqual({
-                SP: 2,
-                MG: 1,
+                Acre: 2,
+                Alagoas: 1,
             });
         });
 
