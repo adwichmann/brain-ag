@@ -2,7 +2,7 @@ export interface IFarm {
   id: number;
   name: string;
   city: string;
-  state: IFarmState;
+  state: string;
   total_area: string;
   arable_area: string;
   vegetation_area: string;

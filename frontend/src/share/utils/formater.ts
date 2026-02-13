@@ -34,14 +34,14 @@ export const groupBy = <T extends Record<string, unknown>>(
   objectArray: T[],
   property: keyof T
 ) => {
-  return objectArray.reduce((acc: { [x: string]: T[] }, obj: T) => {
+  return objectArray.reduce((acc: Record<string, T[]>, obj: T) => {
     const key = obj[property] as unknown as string;
     if (!acc[key]) {
       acc[key] = [];
     }
     acc[key].push(obj);
     return acc;
-  }, {} as { [x: string]: T[] });
+  }, {} as Record<string, T[]>);
 };
 
 export const getRandonHex = () => {
@@ -49,9 +49,9 @@ export const getRandonHex = () => {
 };
 
 export const sumFarmsByState = (farms: IFarm[]) => {
-  const result: { [key: string]: number } = {};
+  const result: Record<string, number> = {};
   farms.forEach((farm) => {
-    const stateName = farm.state.name;
+    const stateName = getStateByCode(farm.state);
 
     if (!result[stateName]) {
       result[stateName] = 0;

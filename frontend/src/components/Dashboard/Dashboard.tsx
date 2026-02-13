@@ -1,68 +1,61 @@
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../../store";
-import { fetchFarmData } from "../../store/farmActions";
+import { useMemo } from "react";
+import { useGetFarmsQuery } from "../../store/apiSlice";
 import CustomChart from "./CustomChart";
-import { farmActions } from "../../store/farmSlice";
-import { getRandonHex } from "../../share/utils/formater";
-import { ChartData } from "../../share/interfaces/app_interfaces";
+import { getRandonHex, sumFarmsByState } from "../../share/utils/formater";
+import { ChartData, IFarm } from "../../share/interfaces/app_interfaces";
 import LoaderSpin from "../Loader";
 
 const Dashboard = () => {
-  const dispatch: AppDispatch = useDispatch();
+  const { data: farms = [], isLoading: loading } = useGetFarmsQuery();
 
-  const farms = useSelector((state: RootState) => state.farm.farms);
-  const farmByState = useSelector(
-    (state: RootState) => state.farm.farmsByState
-  );
+  const { chartFarmStateData, chartAreaData, chartConfig, chartConfig2, totalArea } = useMemo(() => {
+    const farmByState = sumFarmsByState(farms);
+    const chartFarmStateData: ChartData[] = [];
+    const chartConfig: Record<string, { Label: string; color: string }> = {};
 
-  const chartsData = useSelector((state: RootState) => state.farm.chartsData);
-  const loading = useSelector((state: RootState) => state.farm.loading);
-  const chartFarmStateData: ChartData[] = [];
-  const chartAreaData: ChartData[] = [];
-  const chartConfig: { [key: string]: { Label: string; color: string } } = {};
-  const chartConfig2: { [key: string]: { Label: string; color: string } } = {};
-
-  useEffect(() => {
-    dispatch(fetchFarmData());
-    dispatch(farmActions.getFarmsByState());
-  }, [dispatch]);
-
-  if (farmByState) {
-    for (const a in farmByState) {
+    for (const state in farmByState) {
       const color = getRandonHex();
       chartFarmStateData.push({
-        item: a,
-        total: farmByState[a],
+        item: state,
+        total: farmByState[state],
         fill: color,
       });
-      chartConfig[a] = { Label: a, color: color };
+      chartConfig[state] = { Label: state, color: color };
     }
-  }
 
-  if (chartsData) {
-    const total = chartsData.arable_area + chartsData.vegetation_area;
+    let total_area = 0;
+    let arable_area = 0;
+    let vegetation_area = 0;
+    farms.forEach((farm: IFarm) => {
+      total_area += parseFloat(farm.total_area);
+      arable_area += parseFloat(farm.arable_area);
+      vegetation_area += parseFloat(farm.vegetation_area);
+    });
+
+    const totalCalculated = arable_area + vegetation_area;
     const totalVegetationColor = getRandonHex();
     const totalArablecolor = getRandonHex();
-    chartAreaData.push({
-      item: "Vegetação",
-      total: (chartsData.vegetation_area / total) * 100,
-      fill: totalVegetationColor,
-    });
-    chartConfig2["Vegetação"] = {
-      Label: "Vegetação",
-      color: totalVegetationColor,
+
+    const chartAreaData: ChartData[] = [
+      {
+        item: "Vegetação",
+        total: totalCalculated > 0 ? (vegetation_area / totalCalculated) * 100 : 0,
+        fill: totalVegetationColor,
+      },
+      {
+        item: "Agricultável",
+        total: totalCalculated > 0 ? (arable_area / totalCalculated) * 100 : 0,
+        fill: totalArablecolor,
+      },
+    ];
+
+    const chartConfig2 = {
+      Vegetação: { Label: "Vegetação", color: totalVegetationColor },
+      Agricultável: { Label: "Agricultável", color: totalArablecolor },
     };
-    chartAreaData.push({
-      item: "Agricultável",
-      total: (chartsData.arable_area / total) * 100,
-      fill: totalArablecolor,
-    });
-    chartConfig2["Agricultável"] = {
-      Label: "Agricultável",
-      color: totalArablecolor,
-    };
-  }
+
+    return { chartFarmStateData, chartAreaData, chartConfig, chartConfig2, totalArea: total_area };
+  }, [farms]);
 
   if (loading) {
     return <LoaderSpin />;
@@ -88,7 +81,7 @@ const Dashboard = () => {
           </div>
           <div className="p-6 pt-0">
             <div className="text-5xl font-bold">
-              {chartsData.total_area ?? 0}
+              {totalArea}
             </div>
           </div>
         </div>

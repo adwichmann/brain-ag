@@ -1,10 +1,10 @@
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../store";
-import classes from "./FarmPage.module.css";
+import { useAppDispatch } from "../store/hooks";
+import { getStateByCode } from "../share/utils/formater";
+
 import { useEffect, useState } from "react";
 import { IFarm } from "../share/interfaces/app_interfaces";
 import DataTable, { TableColumn } from "react-data-table-component";
-import { deleteFarm, fetchFarmData } from "../store/farmActions";
+import { useDeleteFarmMutation, useGetFarmsQuery } from "../store/apiSlice";
 import { Button } from "../components/ui/button";
 import { FaPlus } from "react-icons/fa";
 import {
@@ -30,10 +30,10 @@ import {
 import LoaderSpin from "../components/Loader";
 
 const FarmPage = () => {
-  const farms = useSelector((state: RootState) => state.farm.farms);
-  const loading = useSelector((state: RootState) => state.farm.loading);
+  const { data: farms, isLoading: loading } = useGetFarmsQuery();
+  const [deleteFarmMutation] = useDeleteFarmMutation();
 
-  const dispatch: AppDispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const [open, setOpen] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
@@ -58,7 +58,7 @@ const FarmPage = () => {
     },
     {
       name: "Estado",
-      selector: (row) => (row?.state.name ? row?.state.name : "-"),
+      selector: (row) => getStateByCode(row.state),
       sortable: true,
     },
     {
@@ -89,7 +89,7 @@ const FarmPage = () => {
 
       cell: (row) => (
         <>
-          <span className="button-edit">
+          <span className="mr-[10px]">
             <Button
               onClick={() => {
                 //return navigate(`/farm/${row.id}`);
@@ -116,16 +116,14 @@ const FarmPage = () => {
       ),
     },
   ];
-  const handleDeleteFarm = () => {
+  const handleDeleteFarm = async () => {
     if (farmId) {
-      dispatch(deleteFarm(farmId));
-      dispatch(fetchFarmData());
+      await deleteFarmMutation(farmId).unwrap();
     }
   };
 
   useEffect(() => {
-    dispatch(fetchFarmData());
-    dispatch(farmActions.setSelectedFarm(null));
+    void dispatch(farmActions.setSelectedFarm(null));
   }, [dispatch]);
 
   if (loading) {
@@ -167,9 +165,9 @@ const FarmPage = () => {
     );
   }
   return (
-    <div className={`page ${classes.farm}`}>
+    <div className="page">
       <div className="flow-root">
-        <h2 className="float-left">Lista de fazendas</h2>
+        <h2 className="float-left text-[1.25rem] my-[0.5rem]">Lista de fazendas</h2>
         <span className="float-right">
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>

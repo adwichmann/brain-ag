@@ -1,30 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 @layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Noto Sans JP', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   :root {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --radius: 0.5rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
   }
- 
-  .dark {
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
-}
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 code {
@@ -32,8 +53,77 @@ code {
     monospace;
 }
 
-@layer base {
-  :root {
-    --radius: 0.5rem;
-  }
+.content {
+  @apply flex flex-row items-start min-h-screen w-full bg-background;
+}
+
+.page {
+  @apply w-full flex flex-col p-[24px] pl-[274px] min-h-screen;
+}
+
+/* Custom styles for DataTable to restore borders, typography and hover */
+.rdt_Table {
+  background-color: transparent !important;
+  color: inherit !important;
+  border-radius: 8px;
+  overflow: hidden;
+  @apply border border-border;
+}
+
+.rdt_TableHeadRow {
+  background-color: hsl(var(--secondary) / 0.8) !important;
+  color: white !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  min-height: 52px !important;
+  @apply border-b border-border uppercase tracking-wider;
+}
+
+.rdt_TableCol {
+  color: #8a8d9b !important;
+  /* Slightly dimmed but readable header text */
+  font-weight: 700 !important;
+}
+
+.rdt_TableRow {
+  background-color: transparent !important;
+  color: inherit !important;
+  min-height: 52px !important;
+  transition: background-color 0.2s ease !important;
+  @apply border-b border-border;
+}
+
+.rdt_TableRow:hover {
+  background-color: rgba(30, 58, 138, 0.4) !important;
+  box-shadow: inset 4px 0 0 0 #3b82f6;
+  cursor: pointer;
+}
+
+.rdt_TableCell {
+  font-size: 14px !important;
+}
+
+.rdt_Pagination {
+  background-color: transparent !important;
+  color: inherit !important;
+  @apply border-t border-border;
+}
+
+/* Scrollbar styles for dark theme */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--accent));
 }

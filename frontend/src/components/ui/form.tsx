@@ -15,10 +15,10 @@ import { Label } from "@/components/ui/label"
 
 const Form = FormProvider
 
-type FormFieldContextValue<
+interface FormFieldContextValue<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
-> = {
+> {
   name: TName
 }
 
@@ -62,7 +62,7 @@ const useFormField = () => {
   }
 }
 
-type FormItemContextValue = {
+interface FormItemContextValue {
   id: string
 }
 
@@ -133,7 +133,7 @@ const FormDescription = React.forwardRef<
     <p
       ref={ref}
       id={formDescriptionId}
-      className={cn("text-[0.8rem] text-neutral-500 dark:text-neutral-400", className)}
+      className={cn("text-[0.8rem] text-muted-foreground", className)}
       {...props}
     />
   )

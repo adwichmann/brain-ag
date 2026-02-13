@@ -17,7 +17,7 @@ async function bootstrap() {
 
   app.enableCors({
     origin: ['http://localhost:5000', 'https://brain-ag-psi.vercel.app'],
-    methods: ['GET', 'POST', 'DELETE', 'PATCH'],
+    methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT'],
     credentials: false,
   });
   const themeCss = fs.readFileSync('swagger.theme.css', 'utf8');

@@ -1,8 +1,8 @@
 import Dashboard from "../components/Dashboard/Dashboard";
-import classes from "./DashboardPage.module.css";
+
 const DashboardPage = () => {
   return (
-    <div className={`page ${classes.dashboard} h-full`}>
+    <div className="page bg-[#313131] text-white p-[15px] h-full">
       <h2>Resultados</h2>
       <Dashboard />
     </div>

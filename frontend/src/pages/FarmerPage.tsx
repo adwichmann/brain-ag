@@ -1,10 +1,8 @@
-import { useDispatch, useSelector } from "react-redux";
-import classes from "./FarmerPage.module.css";
-import { AppDispatch, RootState } from "../store";
+import { useAppDispatch } from "../store/hooks";
 import DataTable, { TableColumn } from "react-data-table-component";
 
 import { useEffect, useState } from "react";
-import { deleteFarmer, fetchFarmerData } from "../store/farmActions";
+import { useDeleteFarmerMutation, useGetFarmersQuery } from "../store/apiSlice";
 import { IFarmer } from "../share/interfaces/app_interfaces";
 
 import { formatCpfCnpj } from "../share/utils/formater";
@@ -32,10 +30,10 @@ import {
 import LoaderSpin from "../components/Loader";
 
 const FarmerPage = () => {
-  const farmers = useSelector((state: RootState) => state.farm.farmers);
-  const loading = useSelector((state: RootState) => state.farm.loading);
+  const { data: farmers, isLoading: loading } = useGetFarmersQuery();
+  const [deleteFarmerMutation] = useDeleteFarmerMutation();
 
-  const dispatch: AppDispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const [open, setOpen] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
@@ -63,7 +61,7 @@ const FarmerPage = () => {
       width: "13%",
       cell: (row) => (
         <div className="">
-          <span className="button-edit">
+          <span className="mr-[10px]">
             <Button
               onClick={() => {
                 dispatch(farmActions.setSelectedFarmer(row));
@@ -91,16 +89,15 @@ const FarmerPage = () => {
     },
   ];
 
-  const handleDeleteFarmer = () => {
+  const handleDeleteFarmer = async () => {
     if (farmerId) {
-      dispatch(deleteFarmer(farmerId));
-      dispatch(fetchFarmerData());
+      await deleteFarmerMutation(farmerId).unwrap();
     }
   };
 
   useEffect(() => {
-    dispatch(fetchFarmerData());
-  }, [dispatch]);
+    // Component initialization
+  }, []);
 
   if (loading) {
     return <LoaderSpin />;
@@ -142,9 +139,9 @@ const FarmerPage = () => {
     );
   }
   return (
-    <div className={`page ${classes.farmer}`}>
+    <div className="page">
       <div className="flow-root">
-        <h2 className="float-left">Lista de produtores</h2>
+        <h2 className="float-left text-[1.25rem] my-[0.5rem]">Lista de produtores</h2>
         <span className="float-right">
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>

@@ -3,7 +3,7 @@ import { PiFarmFill } from "react-icons/pi";
 import { MdDashboard } from "react-icons/md";
 import { NavLink } from "react-router-dom";
 
-import "./Navbar.css";
+
 import { IconContext } from "react-icons";
 // const SidebarData = [
 //   {
@@ -38,62 +38,46 @@ function Navbar() {
             <FaIcons.FaBars onClick={showSidebar} />
           </Link>
         </div> */}
-        <nav className={"nav-menu active"}>
-          <ul className="nav-menu-items">
-            <li className="nav-text">
+        <nav className="w-[250px] h-screen fixed top-0 left-0 bg-[#060b26] transition-[350ms] active">
+          <ul className="w-full mt-[30px]">
+            <li className="h-[60px] py-[8px] pl-[16px] flex justify-start items-center list-none">
               <NavLink
                 to="/"
                 className={({ isActive }) =>
-                  isActive || window.location.pathname.indexOf("farmer/") > -1
-                    ? "active"
-                    : undefined
+                  `h-full w-[95%] px-[16px] flex items-center text-[18px] text-[#f5f5f5] rounded-[4px] no-underline transition-colors hover:bg-[#1a83ff] ${isActive || window.location.pathname.includes("farmer/")
+                    ? "bg-[#1a83ff]"
+                    : ""
+                  }`
                 }
               >
                 <GiFarmer />
-                <span>Produtores</span>
+                <span className="ml-[16px]">Produtores</span>
               </NavLink>
             </li>
-            <li className="nav-text">
+            <li className="h-[60px] py-[8px] pl-[16px] flex justify-start items-center list-none">
               <NavLink
                 to="/farm"
-                className={({ isActive }) => (isActive ? "active" : undefined)}
+                className={({ isActive }) =>
+                  `h-full w-[95%] px-[16px] flex items-center text-[18px] text-[#f5f5f5] rounded-[4px] no-underline transition-colors hover:bg-[#1a83ff] ${isActive ? "bg-[#1a83ff]" : ""
+                  }`
+                }
               >
                 <PiFarmFill />
-                <span>Fazendas</span>
+                <span className="ml-[16px]">Fazendas</span>
               </NavLink>
             </li>
-            <li className="nav-text">
+            <li className="h-[60px] py-[8px] pl-[16px] flex justify-start items-center list-none">
               <NavLink
                 to="/dashboard"
-                className={({ isActive }) => (isActive ? "active" : undefined)}
+                className={({ isActive }) =>
+                  `h-full w-[95%] px-[16px] flex items-center text-[18px] text-[#f5f5f5] rounded-[4px] no-underline transition-colors hover:bg-[#1a83ff] ${isActive ? "bg-[#1a83ff]" : ""
+                  }`
+                }
               >
                 <MdDashboard />
-                <span>Resultados</span>
+                <span className="ml-[16px]">Resultados</span>
               </NavLink>
             </li>
-            {/* <li className="navbar-toggle">
-              <Link to="#" className="menu-bars">
-                <AiIcons.AiOutlineClose />
-              </Link>
-            </li> */}
-            {/* {SidebarData.map((item, index) => {
-              
-              return (
-                <li key={index} className={item.cName}>
-                  <NavLink
-                    to={item.path}
-                    className={({ isActive }) =>
-                      isActive || window.location.hash.indexOf("farmer/") > -1
-                        ? "active"
-                        : undefined
-                    }
-                  >
-                    {item.icon}
-                    <span>{item.title}</span>
-                  </NavLink>
-                </li>
-              );
-            })} */}
           </ul>
         </nav>
       </IconContext.Provider>

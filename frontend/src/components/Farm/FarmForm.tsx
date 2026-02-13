@@ -12,9 +12,8 @@ import { Button } from "../ui/button";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../../store";
 import { useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   ICrop,
   IFarm,
@@ -24,15 +23,15 @@ import {
 } from "../../share/interfaces/app_interfaces";
 import { useToast } from "../../hooks/use-toast";
 import {
-  createFarm,
-  fetchFarmerData,
-  updateFarm,
-  fetchHarvestsData,
-  createHarvest,
-  fetchCropsData,
-  createCrop,
-  updateHarvest,
-} from "../../store/farmActions";
+  useCreateCropMutation,
+  useCreateFarmMutation,
+  useCreateHarvestMutation,
+  useGetCropsQuery,
+  useGetFarmersQuery,
+  useGetHarvestsQuery,
+  useUpdateFarmMutation,
+  useUpdateHarvestMutation,
+} from "../../store/apiSlice";
 import {
   Select,
   SelectContent,
@@ -94,49 +93,57 @@ const FarmForm = ({
   create?: boolean;
   closemodal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-  const selectedFarm = useSelector(
-    (state: RootState) => state.farm.selectedFarm
+  const selectedFarm = useAppSelector(
+    (state) => state.farm.selectedFarm
   );
 
   const { toast } = useToast();
-  const dispatch: AppDispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [selectedHarvest, setSelectedHarvest] = useState<number | null>();
   const [selectedCrop, setSelectedCrop] = useState<number[]>([]);
   const [inputHarvestValue, setHarvestValue] = useState<OptionItem | null>();
   const [inputCropValue, setCropValue] = useState<OptionItem[]>([]);
-  const farmers = useSelector((state: RootState) => state.farm.farmers);
-  //const harvests = useSelector((state: RootState) => state.farm.harvests || []);
+
+  const { data: farmers = [] } = useGetFarmersQuery();
+  useGetHarvestsQuery();
+  useGetCropsQuery();
+
+  const [createFarmMutation] = useCreateFarmMutation();
+  const [updateFarmMutation] = useUpdateFarmMutation();
+  const [updateHarvestMutation] = useUpdateHarvestMutation();
+  const [createHarvestMutation] = useCreateHarvestMutation();
+  const [createCropMutation] = useCreateCropMutation();
   const [selectedState, setSelectedState] = useState(
-    selectedFarm?.state.code || ""
+    selectedFarm?.state ?? ""
   );
   const [selectedCity, setSelectedCity] = useState<string[]>([]);
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: !create
       ? {
-          name: selectedFarm?.name || "",
-          city: selectedFarm?.city || "",
-          state: selectedFarm?.state.code || "",
-          total_area: selectedFarm?.total_area.toString() || "0",
-          arable_area: selectedFarm?.arable_area.toString() || "0",
-          vegetation_area: selectedFarm?.vegetation_area.toString() || "0",
-          user: selectedFarm?.user?.name || "",
-          feedback_area: "",
-        }
+        name: selectedFarm?.name ?? "",
+        city: selectedFarm?.city ?? "",
+        state: selectedFarm?.state ?? "",
+        total_area: selectedFarm?.total_area.toString() ?? "0",
+        arable_area: selectedFarm?.arable_area.toString() ?? "0",
+        vegetation_area: selectedFarm?.vegetation_area.toString() ?? "0",
+        user: selectedFarm?.user?.name ?? "",
+        feedback_area: "",
+      }
       : {
-          name: "",
-          city: "",
-          state: "",
-          total_area: "0",
-          arable_area: "0",
-          vegetation_area: "0",
-          user: "",
-          feedback_area: "",
-        },
+        name: "",
+        city: "",
+        state: "",
+        total_area: "0",
+        arable_area: "0",
+        vegetation_area: "0",
+        user: "",
+        feedback_area: "",
+      },
   });
 
-  const onSubmit = (data: z.infer<typeof FormSchema>) => {
+  const onSubmit = async (data: z.infer<typeof FormSchema>) => {
     if (selectedFarm) {
       const farm: IFarm = {
         name: data.name,
@@ -144,7 +151,7 @@ const FarmForm = ({
         active: true,
         user: selectedFarm.user,
         city: data.city,
-        state: { code: data.state, name: "" },
+        state: data.state,
         total_area: data.total_area,
         arable_area: data.arable_area,
         vegetation_area: data.vegetation_area,
@@ -156,17 +163,17 @@ const FarmForm = ({
           id: selectedHarvest,
           crops: selectedCrop,
         };
-        dispatch(updateHarvest(harvestUpdate));
+        await updateHarvestMutation(harvestUpdate).unwrap();
       }
 
-      dispatch(updateFarm(farm));
+      await updateFarmMutation(farm).unwrap();
       toast({
         title: "Fazenda atualizada com sucesso",
       });
 
       const timeout = setTimeout(() => {
         if (closemodal) closemodal(false);
-        navigate("/farm");
+        void navigate("/farm");
       }, 500);
 
       return () => clearTimeout(timeout);
@@ -176,20 +183,20 @@ const FarmForm = ({
         active: true,
         user: +data.user as unknown as IFarmer,
         city: data.city,
-        state: { code: data.state, name: "" },
+        state: data.state,
         total_area: data.total_area,
         arable_area: data.arable_area,
         vegetation_area: data.vegetation_area,
         harvests: selectedHarvest ? [selectedHarvest] : [],
       };
 
-      dispatch(createFarm(farm));
+      await createFarmMutation(farm).unwrap();
       if (selectedHarvest) {
         const harvestUpdate: Omit<IHarvest, "name"> = {
           id: selectedHarvest,
           crops: selectedCrop,
         };
-        dispatch(updateHarvest(harvestUpdate));
+        await updateHarvestMutation(harvestUpdate).unwrap();
       }
       toast({
         title: "Fazenda creada com sucesso",
@@ -197,7 +204,7 @@ const FarmForm = ({
 
       const timeout = setTimeout(() => {
         if (closemodal) closemodal(false);
-        navigate("/farm");
+        void navigate("/farm");
       }, 500);
 
       return () => clearTimeout(timeout);
@@ -228,20 +235,9 @@ const FarmForm = ({
 
   useEffect(() => {
     if (create) {
-      dispatch(farmActions.setSelectedFarm(null));
-      if (farmers.length <= 0) {
-        dispatch(fetchFarmerData());
-      }
+      void dispatch(farmActions.setSelectedFarm(null));
     }
-  }, [create, farmers, dispatch]);
-
-  useEffect(() => {
-    dispatch(fetchHarvestsData());
-  }, [dispatch]);
-
-  useEffect(() => {
-    dispatch(fetchCropsData());
-  }, [dispatch]);
+  }, [create, dispatch]);
 
   useEffect(() => {
     if (selectedFarm?.harvests && selectedFarm?.harvests.length > 0) {
@@ -249,32 +245,27 @@ const FarmForm = ({
       const cropsId: number[] = [];
 
       if (selectedFarm?.harvests.length > 0) {
-        selectedFarm?.harvests.map((harvest) => {
+        selectedFarm?.harvests.map((harvest: IHarvest | number) => {
           const _harvest = harvest as IHarvest;
-          if (_harvest.crops)
-            if (
-              _harvest?.crops &&
-              _harvest.crops &&
-              _harvest.crops.length > 0
-            ) {
-              _harvest.crops.map((crop) => {
-                const _currentCrop = crop as unknown as ICrop;
-                _crops.push({
-                  label: _currentCrop.name,
-                  value: _currentCrop.id.toString(),
-                });
-                cropsId.push(_currentCrop.id);
+          if (_harvest.crops?.length > 0) {
+            _harvest.crops.map((crop: ICrop | number) => {
+              const _currentCrop = crop as unknown as ICrop;
+              _crops.push({
+                label: _currentCrop.name,
+                value: _currentCrop.id.toString(),
               });
-            }
+              cropsId.push(_currentCrop.id);
+            });
+          }
         });
       }
 
       const _harvest: IHarvest | undefined =
         selectedFarm &&
-        selectedFarm?.harvests &&
-        selectedFarm?.harvests[0] &&
-        typeof selectedFarm?.harvests[0] !== "number"
-          ? (selectedFarm?.harvests[0] as IHarvest)
+          selectedFarm?.harvests &&
+          selectedFarm?.harvests[0] &&
+          typeof selectedFarm?.harvests[0] !== "number"
+          ? (selectedFarm?.harvests[0])
           : undefined;
       if (_harvest) {
         setHarvestValue({
@@ -292,17 +283,16 @@ const FarmForm = ({
     label,
     value: label.toLowerCase().replace(/\W/g, ""),
   });
-  const handleCreate = async (item: string) => {
-    const timeout = setTimeout(() => {
+  const handleCreate = (item: string) => {
+    const timeout = setTimeout(async () => {
       const newOption = createOption(item);
 
       const NewHarvert = {
         name: item,
         crops: [],
       };
-      dispatch(createHarvest(NewHarvert)).then((harvest) =>
-        setSelectedHarvest(harvest.id)
-      );
+      const harvest = await createHarvestMutation(NewHarvert).unwrap();
+      if (harvest) setSelectedHarvest(harvest.id);
 
       setHarvestValue(newOption);
     }, 1000);
@@ -312,7 +302,7 @@ const FarmForm = ({
 
   const handleCreateCrop = (crop: string) => {
     if (inputHarvestValue) {
-      const timeout = setTimeout(() => {
+      const timeout = setTimeout(async () => {
         const newOption = createOption(crop);
 
         const newCrop = {
@@ -320,7 +310,7 @@ const FarmForm = ({
           harvest: selectedHarvest ?? undefined,
         };
 
-        dispatch(createCrop(newCrop));
+        await createCropMutation(newCrop).unwrap();
         setCropValue([...inputCropValue, newOption]);
         //setCropValue((prev) => [...prev, newOption]);
       }, 1000);
@@ -594,9 +584,9 @@ const FarmForm = ({
           <Button
             type="button"
             onClick={() => {
-              dispatch(farmActions.setSelectedFarm(null));
+              void dispatch(farmActions.setSelectedFarm(null));
               if (closemodal) closemodal(false);
-              return navigate("/farm");
+              void navigate("/farm");
             }}
             variant="link"
           >

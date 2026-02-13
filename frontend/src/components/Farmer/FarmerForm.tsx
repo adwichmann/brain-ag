@@ -11,12 +11,11 @@ import { Button } from "../ui/button";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../../store";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
 
 import { formatCpfCnpj } from "../../share/utils/formater";
 
-import { createFarmer, updateFarmer } from "../../store/farmActions";
+import { useCreateFarmerMutation, useUpdateFarmerMutation } from "../../store/apiSlice";
 import { IFarmer, INewFarmer } from "../../share/interfaces/app_interfaces";
 import { useToast } from "../../hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -46,9 +45,12 @@ const FarmerForm = ({
 }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const dispatch: AppDispatch = useDispatch();
-  const selectedFarmer = useSelector(
-    (state: RootState) => state.farm.selectedFarmer
+  const dispatch = useAppDispatch();
+  const [createFarmerMutation] = useCreateFarmerMutation();
+  const [updateFarmerMutation] = useUpdateFarmerMutation();
+
+  const selectedFarmer = useAppSelector(
+    (state) => state.farm.selectedFarmer
   );
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -62,7 +64,7 @@ const FarmerForm = ({
     },
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
     if (selectedFarmer) {
       const farmer: IFarmer = {
         name: data.name,
@@ -72,14 +74,14 @@ const FarmerForm = ({
         active: true,
       };
 
-      dispatch(updateFarmer(farmer));
+      await updateFarmerMutation(farmer).unwrap();
       toast({
         title: "Produtor atualizado com sucesso",
       });
 
       const timeout = setTimeout(() => {
         if (closemodal) closemodal(false);
-        navigate("/");
+        void navigate("/");
       }, 300);
 
       return () => clearTimeout(timeout);
@@ -91,13 +93,13 @@ const FarmerForm = ({
         active: true,
       };
 
-      dispatch(createFarmer(farmer));
+      await createFarmerMutation(farmer).unwrap();
       toast({
         title: "Produtor cadastrado com sucesso",
       });
 
       const timeout = setTimeout(() => {
-        navigate("/");
+        void navigate("/");
       }, 300);
       if (closemodal) closemodal(false);
       return () => clearTimeout(timeout);
